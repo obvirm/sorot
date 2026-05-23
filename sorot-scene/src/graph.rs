@@ -109,7 +109,23 @@ impl SceneGraph {
                 Vec2::new(center.x - rx, center.y - ry),
                 Vec2::new(center.x + rx, center.y + ry),
             ),
-            NodeKind::Path { .. } => Rect::zero(),
+            NodeKind::Path { path_id } => {
+                if let Some(stored) = self.get_path(path_id) {
+                    if stored.points.is_empty() {
+                        Rect::zero()
+                    } else {
+                        let mut min = stored.points[0];
+                        let mut max = stored.points[0];
+                        for p in &stored.points[1..] {
+                            min = min.min(*p);
+                            max = max.max(*p);
+                        }
+                        Rect::new(min, max)
+                    }
+                } else {
+                    Rect::zero()
+                }
+            }
             NodeKind::Group { .. } | NodeKind::Transform(_) => Rect::zero(),
         };
 

@@ -1,10 +1,7 @@
-use sorot_render::render_ir::{RenderFrame, RenderPacket, PacketId, SdfOp};
+use sorot_render::render_ir::{PacketId, RenderFrame, SdfOp};
 
-/// A unit of GPU work — renders to a target, optionally reads from inputs.
 #[derive(Debug, Clone)]
 pub enum PassKind {
-    /// Render triangulated shapes to a color attachment.
-    /// Packets are referenced by ID from the frame's packet arena.
     Shape {
         packet_ids: Vec<PacketId>,
         target_id: usize,
@@ -28,8 +25,6 @@ pub struct RenderPass {
 #[derive(Debug, Clone)]
 pub struct PassGraph {
     pub passes: Vec<RenderPass>,
-    pub screen_width: u32,
-    pub screen_height: u32,
 }
 
 impl PassGraph {
@@ -40,56 +35,43 @@ impl PassGraph {
     ) -> Self {
         let mut passes = Vec::new();
 
-        let mut packet_ids: Vec<PacketId> = frame
-            .tiles
-            .iter()
-            .flat_map(|t| t.packet_ids.iter().copied())
-            .collect();
-        packet_ids.sort();
-        packet_ids.dedup();
+        let mut seen = vec![false; frame.packet_arena.len()];
+        let mut packet_ids: Vec<PacketId> = Vec::new();
+        for tile in &frame.tiles {
+            for &id in &tile.packet_ids {
+                if !seen[id as usize] {
+                    seen[id as usize] = true;
+                    packet_ids.push(id);
+                }
+            }
+        }
 
         if !packet_ids.is_empty() {
             passes.push(RenderPass {
-                kind: PassKind::Shape {
-                    packet_ids,
-                    target_id: shape_target,
-                },
+                kind: PassKind::Shape { packet_ids, target_id: shape_target },
                 label: "shape".into(),
             });
         }
 
         for op in &frame.sdf_ops {
             passes.push(RenderPass {
-                kind: PassKind::Sdf {
-                    op: op.clone(),
-                    target_id: sdf_target,
-                },
+                kind: PassKind::Sdf { op: op.clone(), target_id: sdf_target },
                 label: "sdf".into(),
             });
         }
 
-        let mut input_ids = Vec::new();
-        if !passes.is_empty() {
-            input_ids.push(shape_target);
-        }
-        if !frame.sdf_ops.is_empty() {
-            input_ids.push(sdf_target);
-        }
-
-        if !input_ids.is_empty() {
+        let has_shape = !passes.is_empty();
+        let has_sdf = !frame.sdf_ops.is_empty();
+        if has_shape || has_sdf {
+            let mut input_ids = Vec::new();
+            if has_shape { input_ids.push(shape_target); }
+            if has_sdf { input_ids.push(sdf_target); }
             passes.push(RenderPass {
-                kind: PassKind::Composite {
-                    input_ids,
-                    clear_color: [0.05, 0.05, 0.08, 1.0],
-                },
+                kind: PassKind::Composite { input_ids, clear_color: [0.05, 0.05, 0.08, 1.0] },
                 label: "composite".into(),
             });
         }
 
-        Self {
-            passes,
-            screen_width: frame.screen_width,
-            screen_height: frame.screen_height,
-        }
+        Self { passes }
     }
 }

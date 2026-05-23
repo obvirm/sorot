@@ -2067,7 +2067,6 @@ dependencies = [
 name = "sorot-scene"
 version = "0.1.0"
 dependencies = [
- "rayon",
  "sorot-compositor",
  "sorot-core",
  "sorot-path",
