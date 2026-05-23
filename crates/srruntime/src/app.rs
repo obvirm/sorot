@@ -52,6 +52,9 @@ impl ApplicationHandler for AetherApp {
 
             let window = event_loop.create_window(window_attributes).unwrap();
             self.gpu = unsafe { GpuContext::new(&window) };
+            if let Some(gpu) = &self.gpu {
+                self.renderer.init(gpu);
+            }
             self.window = Some(window);
         }
     }

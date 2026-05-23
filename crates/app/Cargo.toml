@@ -1,0 +1,13 @@
+[package]
+name = "sorot-app"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "sorot"
+path = "src/main.rs"
+
+[dependencies]
+srruntime = { path = "../srruntime" }
+srcore = { path = "../srcore" }
+srmath = { path = "../srmath" }

@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 srmath = { path = "../srmath" }
 srgpu = { path = "../srgpu" }
+srshader = { path = "../srshader" }
 slotmap = "1"
 wgpu = "29"
