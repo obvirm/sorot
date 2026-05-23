@@ -1,4 +1,4 @@
-use srcore::math::Vec2;
+use crate::math::Vec2;
 
 /// Signed distance from a point to a line segment.
 /// Positive = point is to the "right" of the directed edge.

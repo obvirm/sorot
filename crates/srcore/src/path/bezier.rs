@@ -1,4 +1,4 @@
-use srcore::math::{Rect, Vec2};
+use crate::math::{Rect, Vec2};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Cubic {

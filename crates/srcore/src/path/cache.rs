@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 
-use crate::flatten::{flatten_path, FlattenedPath};
-use crate::path::Path;
+use super::flatten::{flatten_path, FlattenedPath};
+use super::path::Path;
 
 pub struct PathCache {
     entries: std::collections::HashMap<u64, FlattenedPath>,

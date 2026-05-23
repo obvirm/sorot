@@ -1,6 +1,6 @@
 use srcore::math::{Matrix, Rect, Vec2};
 use srcore::paint::Paint;
-use srpath::{flatten_path, Path, PathVerb};
+use srcore::path::{flatten_path, Path, PathVerb};
 use srraster::{triangulate, TriMesh};
 
 pub type NodeId = u32;

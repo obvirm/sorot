@@ -1,6 +1,6 @@
 use srcore::math::{Matrix, Rect, Vec2};
 use srcore::paint::Paint;
-use srpath::Path;
+use srcore::path::Path;
 use srrender::render_ir::{GpuVertex, RenderFrame, RenderPacket};
 
 use crate::display_list::{DisplayList, DrawCommand};

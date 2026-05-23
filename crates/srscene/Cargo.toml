@@ -6,7 +6,6 @@ license.workspace = true
 
 [dependencies]
 srcore = { path = "../srcore" }
-srpath = { path = "../srpath" }
 srraster = { path = "../srraster" }
 srrender = { path = "../srrender" }
 srcompositor = { path = "../srcompositor" }

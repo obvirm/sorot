@@ -6,7 +6,6 @@ license.workspace = true
 
 [dependencies]
 srcore = { path = "../srcore" }
-srpath = { path = "../srpath" }
 
 [dev-dependencies]
 criterion.workspace = true

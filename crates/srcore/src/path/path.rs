@@ -1,4 +1,4 @@
-use srcore::math::Vec2;
+use crate::math::Vec2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PathVerb {

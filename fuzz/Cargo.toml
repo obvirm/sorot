@@ -1,0 +1,34 @@
+[package]
+name = "sorotfuzz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", features = ["derive"] }
+
+srcore = { path = "../crates/srcore" }
+srraster = { path = "../crates/srraster" }
+srcompositor = { path = "../crates/srcompositor" }
+
+[[bin]]
+name = "fuzzmatrix"
+path = "fuzzmatrix.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzzpath"
+path = "fuzzpath.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzzcolor"
+path = "fuzzcolor.rs"
+test = false
+doc = false

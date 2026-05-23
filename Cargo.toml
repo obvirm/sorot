@@ -2,13 +2,13 @@
 members = [
     "sorot",
     "crates/srcore",
-    "crates/srpath",
     "crates/srraster",
     "crates/srcompositor",
     "crates/srrender",
     "crates/srscene",
     "crates/srgpu",
     "crates/srscheduler",
+    "fuzz",
 ]
 resolver = "2"
 

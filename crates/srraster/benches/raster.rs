@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use srcore::math::Vec2;
-use srpath::{flatten_path, FlattenVerb, FlattenedPath, Path};
+use srcore::path::{flatten_path, FlattenVerb, FlattenedPath, Path};
 use srraster::{scanline, triangulate, TriMesh};
 use srcore::color::Color;
 

@@ -1,7 +1,7 @@
-use srcore::math::Vec2;
+use crate::math::Vec2;
 
-use crate::bezier::{Cubic, Quad};
-use crate::path::{Path, PathVerb};
+use super::bezier::{Cubic, Quad};
+use super::path::{Path, PathVerb};
 
 #[derive(Debug, Clone)]
 pub struct FlattenedPath {

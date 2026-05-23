@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-use srpath::{flatten_path, FlattenedPath, Path};
+use srcore::path::{flatten_path, FlattenedPath, Path};
 use srraster::{triangulate, TriMesh};
 
 fn hash_path_and_tol(path: &Path, tolerance: f32) -> u64 {

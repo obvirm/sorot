@@ -1,7 +1,7 @@
 use srcore::color::Color;
 use srcore::math::{Rect, Vec2};
 use srcore::paint::Paint;
-use srpath::{flatten_path, Path};
+use srcore::path::{flatten_path, Path};
 use srraster::sdf::compute_sdf;
 use srrender::render_ir::{RenderFrame, SdfOp};
 use srscene::canvas::Canvas;

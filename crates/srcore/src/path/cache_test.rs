@@ -1,6 +1,6 @@
 use super::*;
-    use crate::path::Path;
-    use srcore::math::Vec2;
+use super::super::path::Path;
+use crate::math::Vec2;
 
     #[test]
     fn test_cache_hit() {

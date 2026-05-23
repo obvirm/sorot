@@ -1,5 +1,5 @@
 use super::*;
-    use srcore::math::Vec2;
+    use crate::math::Vec2;
 
     #[test]
     fn test_flatten_line() {

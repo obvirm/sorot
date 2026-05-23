@@ -1,6 +1,6 @@
 use srcore::color::Color;
 use srcore::math::Vec2;
-use srpath::{FlattenVerb, FlattenedPath};
+use srcore::path::{FlattenVerb, FlattenedPath};
 
 use crate::tile::Edge;
 

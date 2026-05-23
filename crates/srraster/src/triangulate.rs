@@ -1,5 +1,5 @@
 use srcore::math::Vec2;
-use srpath::{FlattenVerb, FlattenedPath};
+use srcore::path::{FlattenVerb, FlattenedPath};
 
 #[derive(Debug, Clone)]
 pub struct TriMesh {

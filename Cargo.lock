@@ -137,6 +137,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
+dependencies = [
+ "derive_arbitrary",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -522,6 +531,17 @@ name = "cursor-icon"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
+
+[[package]]
+name = "derive_arbitrary"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "dispatch"
@@ -1016,6 +1036,16 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+
+[[package]]
+name = "libfuzzer-sys"
+version = "0.4.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f12a681b7dd8ce12bff52488013ba614b869148d54dd79836ab85aafdd53f08d"
+dependencies = [
+ "arbitrary",
+ "cc",
+]
 
 [[package]]
 name = "libloading"
@@ -2005,10 +2035,20 @@ dependencies = [
  "pollster",
  "srcore",
  "srgpu",
- "srpath",
  "srraster",
  "srrender",
  "srscene",
+]
+
+[[package]]
+name = "sorotfuzz"
+version = "0.1.0"
+dependencies = [
+ "arbitrary",
+ "libfuzzer-sys",
+ "srcompositor",
+ "srcore",
+ "srraster",
 ]
 
 [[package]]
@@ -2041,18 +2081,10 @@ dependencies = [
  "log",
  "pollster",
  "srcore",
- "srpath",
  "srraster",
  "srrender",
  "wgpu",
  "winit",
-]
-
-[[package]]
-name = "srpath"
-version = "0.1.0"
-dependencies = [
- "srcore",
 ]
 
 [[package]]
@@ -2061,7 +2093,6 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "srcore",
- "srpath",
 ]
 
 [[package]]
@@ -2078,7 +2109,6 @@ version = "0.1.0"
 dependencies = [
  "srcompositor",
  "srcore",
- "srpath",
  "srraster",
  "srrender",
 ]

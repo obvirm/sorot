@@ -6,7 +6,6 @@ license.workspace = true
 
 [dependencies]
 srcore = { path = "../crates/srcore" }
-srpath = { path = "../crates/srpath" }
 srraster = { path = "../crates/srraster" }
 srgpu = { path = "../crates/srgpu" }
 srscene = { path = "../crates/srscene" }

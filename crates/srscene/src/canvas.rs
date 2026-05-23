@@ -69,7 +69,7 @@ impl Canvas {
         self.graph.set_transform(node, self.current.transform);
     }
 
-    pub fn draw_path(&mut self, path: &srpath::Path) {
+    pub fn draw_path(&mut self, path: &srcore::path::Path) {
         let paint_id = self.graph.add_paint(self.current.paint.clone());
         let path_id = self.graph.store_path(path);
         let node = self.graph.add_node(NodeKind::Path { path_id }, paint_id);
