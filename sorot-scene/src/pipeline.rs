@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::{Path, PathCache};
+use sorot_path::{Path, PathCache, PathVerb};
 use sorot_raster::triangulate;
+use sorot_render::render_ir::{GpuVertex, RenderFrame, RenderPacket, SdfOp};
 
 use crate::display_list::{DisplayList, DrawCommand};
-use crate::render_ir::{GpuVertex, RenderFrame, RenderPacket, SdfOp};
 
 const TILE_SIZE: u32 = 32;
 
@@ -19,7 +21,6 @@ impl Pipeline {
         }
     }
 
-    /// Consume a DisplayList and produce a RenderFrame ready for GPU submission.
     pub fn build_frame(
         &mut self,
         dl: &DisplayList,
@@ -33,11 +34,7 @@ impl Pipeline {
                 DrawCommand::Rect(dr) => {
                     let path = Path::rect(dr.rect.min, dr.rect.max);
                     if let Some(packet) = self.shape_to_packet(
-                        &path,
-                        &dr.paint,
-                        dr.transform,
-                        screen_width,
-                        screen_height,
+                        &path, &dr.paint, dr.transform, screen_width, screen_height,
                     ) {
                         frame.bin_packet(packet);
                     }
@@ -45,17 +42,42 @@ impl Pipeline {
                 DrawCommand::Oval(ov) => {
                     let path = Path::oval(ov.center, ov.rx, ov.ry);
                     if let Some(packet) = self.shape_to_packet(
-                        &path,
-                        &ov.paint,
-                        ov.transform,
-                        screen_width,
-                        screen_height,
+                        &path, &ov.paint, ov.transform, screen_width, screen_height,
                     ) {
                         frame.bin_packet(packet);
                     }
                 }
-                DrawCommand::Path(_dp) => {
-                    // Path with stored verbs/points — tessellate from stored data
+                DrawCommand::Path(dp) => {
+                    let mut path = Path::new();
+                    let mut pi = 0;
+                    for &verb in &dp.verbs {
+                        match verb {
+                            sorot_path::PathVerb::MoveTo => {
+                                path.move_to(dp.points[pi]);
+                                pi += 1;
+                            }
+                            sorot_path::PathVerb::LineTo => {
+                                path.line_to(dp.points[pi]);
+                                pi += 1;
+                            }
+                            sorot_path::PathVerb::QuadTo => {
+                                path.quad_to(dp.points[pi], dp.points[pi + 1]);
+                                pi += 2;
+                            }
+                            sorot_path::PathVerb::CubicTo => {
+                                path.cubic_to(dp.points[pi], dp.points[pi + 1], dp.points[pi + 2]);
+                                pi += 3;
+                            }
+                            sorot_path::PathVerb::Close => {
+                                path.close();
+                            }
+                        }
+                    }
+                    if let Some(packet) = self.shape_to_packet(
+                        &path, &dp.paint, dp.transform, screen_width, screen_height,
+                    ) {
+                        frame.bin_packet(packet);
+                    }
                 }
             }
         }
@@ -104,12 +126,8 @@ impl Pipeline {
                 min = min.min(p);
                 max = max.max(p);
                 GpuVertex {
-                    clip_x: cx,
-                    clip_y: cy,
-                    r: cf[0],
-                    g: cf[1],
-                    b: cf[2],
-                    a: cf[3],
+                    clip_x: cx, clip_y: cy,
+                    r: cf[0], g: cf[1], b: cf[2], a: cf[3],
                 }
             })
             .collect();
@@ -120,29 +138,12 @@ impl Pipeline {
         ));
 
         Some(RenderPacket {
-            vertices,
-            indices: mesh.indices,
+            vertices: Arc::from(vertices.into_boxed_slice()),
+            indices: Arc::from(mesh.indices.into_boxed_slice()),
             paint: paint.clone(),
             transform,
             clip_rect,
         })
-    }
-
-    pub fn sdf_op(
-        &self,
-        sdf_data: Vec<u8>,
-        sdf_w: u32,
-        sdf_h: u32,
-        bounds: Rect,
-        paint: Paint,
-    ) -> SdfOp {
-        SdfOp {
-            sdf_data,
-            sdf_width: sdf_w,
-            sdf_height: sdf_h,
-            bounds,
-            paint,
-        }
     }
 }
 
@@ -160,31 +161,24 @@ mod tests {
 
     #[test]
     fn test_shape_to_packet() {
-        let mut pipeline = Pipeline::new();
+        let mut p = Pipeline::new();
         let path = Path::rect(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0));
-        let packet = pipeline.shape_to_packet(
-            &path,
-            &Paint::fill(Color::RED),
-            Matrix3x2::identity(),
-            800,
-            600,
+        let packet = p.shape_to_packet(
+            &path, &Paint::fill(Color::RED), Matrix3x2::identity(), 800, 600,
         );
         assert!(packet.is_some());
     }
 
     #[test]
     fn test_build_frame() {
-        let mut pipeline = Pipeline::new();
+        let mut p = Pipeline::new();
         let mut dl = DisplayList::new();
         dl.commands.push(DrawCommand::Rect(DrawRect {
             rect: Rect::new(Vec2::new(10.0, 10.0), Vec2::new(200.0, 200.0)),
             paint: Paint::fill(Color::BLUE),
             transform: Matrix3x2::identity(),
         }));
-
-        let frame = pipeline.build_frame(&dl, 800, 600);
-        assert!(!frame.tiles.is_empty());
-        let has_packets: bool = frame.tiles.iter().any(|t| !t.packets.is_empty());
-        assert!(has_packets);
+        let frame = p.build_frame(&dl, 800, 600);
+        assert!(frame.non_empty_tiles() > 0);
     }
 }

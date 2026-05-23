@@ -5,112 +5,95 @@ use sorot_core::paint::Paint;
 use crate::display_list::DisplayList;
 use crate::graph::{NodeId, NodeKind, SceneGraph};
 
+struct DrawState {
+    transform: Matrix3x2,
+    paint: Paint,
+}
+
 pub struct Canvas {
     graph: SceneGraph,
-    transform_stack: Vec<Matrix3x2>,
-    paint_stack: Vec<Paint>,
-    current_paint: Paint,
+    state_stack: Vec<DrawState>,
+    current: DrawState,
 }
 
 impl Canvas {
     pub fn new() -> Self {
         Self {
             graph: SceneGraph::new(),
-            transform_stack: Vec::new(),
-            paint_stack: Vec::new(),
-            current_paint: Paint::fill(Color::BLACK),
+            state_stack: Vec::new(),
+            current: DrawState {
+                transform: Matrix3x2::identity(),
+                paint: Paint::fill(Color::BLACK),
+            },
         }
     }
 
     pub fn set_paint(&mut self, paint: Paint) {
-        self.current_paint = paint;
+        self.current.paint = paint;
     }
 
     pub fn save(&mut self) {
-        self.transform_stack.push(self.current_transform());
-        self.paint_stack.push(self.current_paint.clone());
+        self.state_stack.push(DrawState {
+            transform: self.current.transform,
+            paint: self.current.paint.clone(),
+        });
     }
 
     pub fn restore(&mut self) {
-        if let Some(t) = self.transform_stack.pop() {
-            self.current_node_mut().transform = t;
-        }
-        if let Some(p) = self.paint_stack.pop() {
-            self.current_paint = p;
+        if let Some(state) = self.state_stack.pop() {
+            self.current = state;
         }
     }
 
     pub fn translate(&mut self, x: f32, y: f32) {
-        self.current_node_mut().transform = self
-            .current_node_mut()
-            .transform
-            .then(Matrix3x2::translate(x, y));
+        self.current.transform = self.current.transform.then(Matrix3x2::translate(x, y));
     }
 
     pub fn scale(&mut self, sx: f32, sy: f32) {
-        self.current_node_mut().transform = self
-            .current_node_mut()
-            .transform
-            .then(Matrix3x2::scale(sx, sy));
+        self.current.transform = self.current.transform.then(Matrix3x2::scale(sx, sy));
     }
 
     pub fn rotate(&mut self, radians: f32) {
-        self.current_node_mut().transform = self
-            .current_node_mut()
-            .transform
-            .then(Matrix3x2::rotate(radians));
+        self.current.transform = self.current.transform.then(Matrix3x2::rotate(radians));
     }
 
     pub fn draw_rect(&mut self, rect: Rect) {
-        let paint_id = self.graph.add_paint(self.current_paint.clone());
-        self.graph.add_node(NodeKind::Rect { rect }, paint_id);
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
+        let node = self.graph.add_node(NodeKind::Rect { rect }, paint_id);
+        self.graph.set_transform(node, self.current.transform);
     }
 
     pub fn draw_oval(&mut self, center: Vec2, rx: f32, ry: f32) {
-        let paint_id = self.graph.add_paint(self.current_paint.clone());
-        self.graph.add_node(NodeKind::Oval { center, rx, ry }, paint_id);
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
+        let node = self.graph.add_node(NodeKind::Oval { center, rx, ry }, paint_id);
+        self.graph.set_transform(node, self.current.transform);
     }
 
     pub fn draw_path(&mut self, path: &sorot_path::Path) {
-        let paint_id = self.graph.add_paint(self.current_paint.clone());
-        self.graph.add_node(
-            NodeKind::Path {
-                first_verb: 0,
-                verb_count: path.verb_count() as u32,
-            },
-            paint_id,
-        );
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
+        let path_id = self.graph.store_path(path);
+        let node = self.graph.add_node(NodeKind::Path { path_id }, paint_id);
+        self.graph.set_transform(node, self.current.transform);
     }
 
     pub fn begin_group(&mut self, opacity: f32) -> NodeId {
-        let paint_id = self.graph.add_paint(self.current_paint.clone());
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
         self.graph.add_node(NodeKind::Group { opacity }, paint_id)
     }
 
     pub fn end_group(&mut self) {}
 
-    pub fn finalize(&mut self) -> DisplayList {
+    pub fn finalize(&self) -> DisplayList {
         let mut dl = DisplayList::new();
+        let identity = Matrix3x2::identity();
         for &root in &self.graph.paint_order.clone() {
             if self.graph.nodes[root as usize].parent == u32::MAX {
                 crate::display_list::build_display_list(
-                    &self.graph,
-                    root,
-                    Matrix3x2::identity(),
-                    None,
-                    &mut dl,
+                    &self.graph, root, identity, None, &mut dl,
                 );
             }
         }
         dl
-    }
-
-    fn current_transform(&self) -> Matrix3x2 {
-        Matrix3x2::identity()
-    }
-
-    fn current_node_mut(&mut self) -> &mut crate::graph::SceneNode {
-        &mut self.graph.nodes[0]
     }
 
     pub fn graph(&self) -> &SceneGraph {
@@ -127,22 +110,31 @@ impl Default for Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sorot_core::color::Color;
 
     #[test]
     fn test_draw_rect() {
-        let mut canvas = Canvas::new();
-        canvas.set_paint(Paint::fill(Color::RED));
-        canvas.draw_rect(Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)));
-        let dl = canvas.finalize();
+        let mut c = Canvas::new();
+        c.set_paint(Paint::fill(Color::RED));
+        c.draw_rect(Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)));
+        let dl = c.finalize();
         assert_eq!(dl.commands.len(), 1);
     }
 
     #[test]
-    fn test_draw_oval() {
-        let mut canvas = Canvas::new();
-        canvas.set_paint(Paint::fill(Color::BLUE));
-        canvas.draw_oval(Vec2::new(50.0, 50.0), 30.0, 20.0);
-        let dl = canvas.finalize();
-        assert_eq!(dl.commands.len(), 1);
+    fn test_save_restore_transform() {
+        let mut c = Canvas::new();
+        c.set_paint(Paint::fill(Color::RED));
+        c.draw_rect(Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)));
+
+        c.save();
+        c.translate(50.0, 0.0);
+        c.set_paint(Paint::fill(Color::BLUE));
+        c.draw_rect(Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)));
+        c.restore();
+
+        c.draw_rect(Rect::new(Vec2::new(200.0, 0.0), Vec2::new(300.0, 100.0)));
+        let dl = c.finalize();
+        assert_eq!(dl.commands.len(), 3);
     }
 }

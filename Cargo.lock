@@ -2007,6 +2007,7 @@ dependencies = [
  "sorot-gpu",
  "sorot-path",
  "sorot-raster",
+ "sorot-render",
  "sorot-scene",
 ]
 
@@ -2033,7 +2034,7 @@ dependencies = [
  "sorot-core",
  "sorot-path",
  "sorot-raster",
- "sorot-scene",
+ "sorot-render",
  "wgpu",
  "winit",
 ]
@@ -2055,6 +2056,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sorot-render"
+version = "0.1.0"
+dependencies = [
+ "sorot-compositor",
+ "sorot-core",
+]
+
+[[package]]
 name = "sorot-scene"
 version = "0.1.0"
 dependencies = [
@@ -2062,6 +2071,7 @@ dependencies = [
  "sorot-core",
  "sorot-path",
  "sorot-raster",
+ "sorot-render",
 ]
 
 [[package]]

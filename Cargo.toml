@@ -4,6 +4,7 @@ members = [
     "sorot-path",
     "sorot-raster",
     "sorot-compositor",
+    "sorot-render",
     "sorot-scene",
     "sorot-gpu",
     "sorot-scheduler",

@@ -1,19 +1,19 @@
-use sorot_scene::render_ir::{RenderFrame, RenderPacket, SdfOp};
+use std::sync::Arc;
+
+use sorot_render::render_ir::{RenderFrame, RenderPacket, SdfOp};
 
 /// A unit of GPU work — renders to a target, optionally reads from inputs.
 #[derive(Debug, Clone)]
 pub enum PassKind {
     /// Render triangulated shapes to a color attachment.
     Shape {
-        packets: Vec<RenderPacket>,
+        packets: Vec<Arc<RenderPacket>>,
         target_id: usize,
     },
-    /// Render an SDF glyph to a color attachment.
     Sdf {
         op: SdfOp,
         target_id: usize,
     },
-    /// Composite inputs onto the swapchain (target_id = u32::MAX).
     Composite {
         input_ids: Vec<usize>,
         clear_color: [f64; 4],
@@ -41,10 +41,10 @@ impl PassGraph {
     ) -> Self {
         let mut passes = Vec::new();
 
-        let all_packets: Vec<RenderPacket> = frame
+        let all_packets: Vec<Arc<RenderPacket>> = frame
             .tiles
             .iter()
-            .flat_map(|t| t.packets.clone())
+            .flat_map(|t| t.packets.iter().map(Arc::clone))
             .collect();
 
         if !all_packets.is_empty() {

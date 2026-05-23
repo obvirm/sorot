@@ -8,7 +8,7 @@ license.workspace = true
 sorot-core = { path = "../sorot-core" }
 sorot-path = { path = "../sorot-path" }
 sorot-raster = { path = "../sorot-raster" }
-sorot-scene = { path = "../sorot-scene" }
+sorot-render = { path = "../sorot-render" }
 wgpu = "24"
 winit = "0.30"
 env_logger = "0.11"

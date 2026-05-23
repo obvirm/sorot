@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
 use sorot_core::color::Color;
 use sorot_core::math::{Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_gpu::sdf::compute_sdf;
 use sorot_path::{flatten_path, Path};
+use sorot_raster::sdf::compute_sdf;
+use sorot_render::render_ir::{RenderFrame, SdfOp};
 use sorot_scene::canvas::Canvas;
 use sorot_scene::pipeline::Pipeline;
-use sorot_scene::render_ir::RenderFrame;
 
 pub fn build_frame() -> RenderFrame {
     let mut canvas = Canvas::new();
@@ -30,14 +32,14 @@ pub fn build_frame() -> RenderFrame {
     let circle = Path::circle(Vec2::new(200.0, 300.0), 140.0);
     let flat = flatten_path(&circle, 0.5);
     let (sdf_pixels, sdf_rect, sdf_w, sdf_h) = compute_sdf(&flat, 128, 0.15);
-    let op = pipeline.sdf_op(
-        sdf_pixels,
-        sdf_w,
-        sdf_h,
-        sdf_rect,
-        Paint::fill(Color::from_rgba(0.2, 0.6, 0.9, 0.95)),
-    );
-    frame.sdf_ops.push(op);
+
+    frame.sdf_ops.push(SdfOp {
+        sdf_data: Arc::from(sdf_pixels.into_boxed_slice()),
+        sdf_width: sdf_w,
+        sdf_height: sdf_h,
+        bounds: sdf_rect,
+        paint: Paint::fill(Color::from_rgba(0.2, 0.6, 0.9, 0.95)),
+    });
 
     frame
 }

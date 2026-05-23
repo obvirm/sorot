@@ -6,7 +6,7 @@ use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{Window, WindowId};
 
-use sorot_scene::render_ir::{RenderFrame, SdfOp};
+use sorot_render::render_ir::{RenderFrame, SdfOp};
 
 use crate::backend::GpuBackend;
 use crate::pass::{PassGraph, PassKind};
@@ -514,7 +514,7 @@ impl WgpuBackend {
                 texture: &sdf_tex, mip_level: 0,
                 origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All,
             },
-            &op.sdf_data,
+            &*op.sdf_data,
             wgpu::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(op.sdf_width),

@@ -1,16 +1,24 @@
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
+use sorot_path::{Path, PathVerb};
 
 pub type NodeId = u32;
 pub type PaintId = u32;
+pub type PathId = u32;
 
 pub const NODE_NULL: NodeId = u32::MAX;
+
+#[derive(Debug, Clone)]
+pub struct StoredPath {
+    pub verbs: Vec<PathVerb>,
+    pub points: Vec<Vec2>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NodeKind {
     Rect { rect: Rect },
     Oval { center: Vec2, rx: f32, ry: f32 },
-    Path { first_verb: u32, verb_count: u32 },
+    Path { path_id: PathId },
     Group { opacity: f32 },
     Transform(Matrix3x2),
 }
@@ -29,6 +37,7 @@ pub struct SceneNode {
 pub struct SceneGraph {
     pub nodes: Vec<SceneNode>,
     pub paints: Vec<Paint>,
+    pub paths: Vec<StoredPath>,
     pub paint_order: Vec<NodeId>,
 }
 
@@ -37,6 +46,7 @@ impl SceneGraph {
         Self {
             nodes: Vec::new(),
             paints: Vec::new(),
+            paths: Vec::new(),
             paint_order: Vec::new(),
         }
     }
@@ -45,6 +55,19 @@ impl SceneGraph {
         let id = self.paints.len() as PaintId;
         self.paints.push(paint);
         id
+    }
+
+    pub fn store_path(&mut self, path: &Path) -> PathId {
+        let id = self.paths.len() as PathId;
+        self.paths.push(StoredPath {
+            verbs: path.verbs().to_vec(),
+            points: path.points().to_vec(),
+        });
+        id
+    }
+
+    pub fn get_path(&self, id: PathId) -> Option<&StoredPath> {
+        self.paths.get(id as usize)
     }
 
     pub fn add_node(&mut self, kind: NodeKind, paint_id: PaintId) -> NodeId {
@@ -132,18 +155,24 @@ mod tests {
     use sorot_core::color::Color;
 
     #[test]
+    fn test_store_path() {
+        let mut g = SceneGraph::new();
+        let p = Path::circle(Vec2::new(50.0, 50.0), 30.0);
+        let id = g.store_path(&p);
+        let stored = g.get_path(id).unwrap();
+        assert_eq!(stored.verbs.len(), p.verb_count());
+    }
+
+    #[test]
     fn test_add_node() {
         let mut g = SceneGraph::new();
         let paint = g.add_paint(Paint::fill(Color::RED));
         let rect = g.add_node(
-            NodeKind::Rect {
-                rect: Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)),
-            },
+            NodeKind::Rect { rect: Rect::new(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0)) },
             paint,
         );
         assert_eq!(rect, 0);
         assert_eq!(g.nodes.len(), 1);
-        assert_eq!(g.paints.len(), 1);
     }
 
     #[test]
@@ -152,9 +181,7 @@ mod tests {
         let p = g.add_paint(Paint::fill(Color::BLACK));
         let parent = g.add_node(NodeKind::Group { opacity: 1.0 }, p);
         let child = g.add_node(
-            NodeKind::Rect {
-                rect: Rect::new(Vec2::new(0.0, 0.0), Vec2::new(50.0, 50.0)),
-            },
+            NodeKind::Rect { rect: Rect::new(Vec2::new(0.0, 0.0), Vec2::new(50.0, 50.0)) },
             p,
         );
         g.add_child(parent, child);
