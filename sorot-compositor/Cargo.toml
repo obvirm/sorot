@@ -6,3 +6,10 @@ license.workspace = true
 
 [dependencies]
 sorot-core = { path = "../sorot-core" }
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "blend"
+harness = false

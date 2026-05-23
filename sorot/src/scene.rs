@@ -2,12 +2,13 @@ use sorot_core::color::Color;
 use sorot_core::math::{Rect, Vec2};
 use sorot_core::paint::Paint;
 use sorot_gpu::sdf::compute_sdf;
-use sorot_path::{flatten_path, Path};
+use sorot_path::{Path, PathCache};
 use sorot_raster::TriMesh;
 use sorot_scene::canvas::Canvas;
 use sorot_scene::display_list::{DisplayList, DrawCommand};
 
 pub fn build_demo() -> (Vec<(TriMesh, Color)>, Option<(Vec<u8>, u32, u32, Rect, Color)>) {
+    let mut cache = PathCache::new();
     let mut canvas = Canvas::new();
 
     canvas.set_paint(Paint::fill(Color::from_rgba(0.2, 0.6, 0.9, 0.9)));
@@ -28,11 +29,12 @@ pub fn build_demo() -> (Vec<(TriMesh, Color)>, Option<(Vec<u8>, u32, u32, Rect, 
     canvas.draw_path(&rr);
 
     let dl = canvas.finalize();
-    process_display_list(&dl)
+    process_display_list(&dl, &mut cache)
 }
 
 fn process_display_list(
     dl: &DisplayList,
+    cache: &mut PathCache,
 ) -> (Vec<(TriMesh, Color)>, Option<(Vec<u8>, u32, u32, Rect, Color)>) {
     let mut meshes: Vec<(TriMesh, Color)> = Vec::new();
     let mut sdf: Option<(Vec<u8>, u32, u32, Rect, Color)> = None;
@@ -41,13 +43,13 @@ fn process_display_list(
         match cmd {
             DrawCommand::Rect(draw_rect) => {
                 let path = Path::rect(draw_rect.rect.min, draw_rect.rect.max);
-                let flat = flatten_path(&path, 0.5);
+                let flat = cache.get_or_flatten(&path, 0.5).clone();
                 let mesh = sorot_raster::triangulate(&flat);
                 meshes.push((mesh, draw_rect.paint.color));
             }
             DrawCommand::Oval(draw_oval) => {
                 let path = Path::oval(draw_oval.center, draw_oval.rx, draw_oval.ry);
-                let flat = flatten_path(&path, 0.5);
+                let flat = cache.get_or_flatten(&path, 0.5).clone();
                 let (data, bounds, w, h) = compute_sdf(&flat, 128, 0.15);
                 sdf = Some((data, w, h, bounds, draw_oval.paint.color));
             }
@@ -56,7 +58,7 @@ fn process_display_list(
                     Vec2::new(520.0, 350.0),
                     Vec2::new(750.0, 500.0),
                 );
-                let flat = flatten_path(&path, 0.5);
+                let flat = cache.get_or_flatten(&path, 0.5).clone();
                 let mesh = sorot_raster::triangulate(&flat);
                 meshes.push((mesh, draw_path.paint.color));
             }

@@ -6,3 +6,4 @@ pub mod cache;
 
 pub use flatten::{FlattenVerb, FlattenedPath, flatten_path};
 pub use path::{FillRule, Path, PathVerb};
+pub use cache::PathCache;
