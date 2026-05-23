@@ -1,6 +1,7 @@
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::{Path, PathVerb};
+use sorot_path::{flatten_path, Path, PathVerb};
+use sorot_raster::{triangulate, TriMesh};
 
 pub type NodeId = u32;
 pub type PaintId = u32;
@@ -12,6 +13,7 @@ pub const NODE_NULL: NodeId = u32::MAX;
 pub struct StoredPath {
     pub verbs: Vec<PathVerb>,
     pub points: Vec<Vec2>,
+    pub mesh: TriMesh,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -59,9 +61,12 @@ impl SceneGraph {
 
     pub fn store_path(&mut self, path: &Path) -> PathId {
         let id = self.paths.len() as PathId;
+        let flat = flatten_path(path, 0.5);
+        let mesh = triangulate(&flat);
         self.paths.push(StoredPath {
             verbs: path.verbs().to_vec(),
             points: path.points().to_vec(),
+            mesh,
         });
         id
     }

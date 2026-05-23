@@ -1,6 +1,6 @@
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::{Path, PathVerb};
+use sorot_path::Path;
 use sorot_render::render_ir::{GpuVertex, RenderFrame, RenderPacket};
 
 use crate::display_list::{DisplayList, DrawCommand};
@@ -39,21 +39,10 @@ impl Pipeline {
                 }
                 DrawCommand::Path(dp) => graph
                     .get_path(dp.path_id)
-                    .and_then(|stored| {
-                        let mut path = Path::new();
-                        let mut pi = 0;
-                        for &verb in &stored.verbs {
-                            match verb {
-                                PathVerb::MoveTo => { path.move_to(stored.points[pi]); pi += 1; }
-                                PathVerb::LineTo => { path.line_to(stored.points[pi]); pi += 1; }
-                                PathVerb::QuadTo => { path.quad_to(stored.points[pi], stored.points[pi + 1]); pi += 2; }
-                                PathVerb::CubicTo => { path.cubic_to(stored.points[pi], stored.points[pi + 1], stored.points[pi + 2]); pi += 3; }
-                                PathVerb::Close => { path.close(); }
-                            }
-                        }
-                        let mesh = self.geom_cache.get_mesh(&path, 0.5);
-                        Self::mesh_to_packet(mesh, &dp.paint, dp.transform, screen_width, screen_height)
-                    }),
+                    .map(|stored| {
+                        Self::mesh_to_packet(&stored.mesh, &dp.paint, dp.transform, screen_width, screen_height)
+                    })
+                    .flatten(),
             };
 
             if let Some(p) = packet {
