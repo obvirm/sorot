@@ -9,5 +9,6 @@ sorot-core = { path = "../sorot-core" }
 sorot-path = { path = "../sorot-path" }
 sorot-raster = { path = "../sorot-raster" }
 sorot-gpu = { path = "../sorot-gpu" }
+sorot-scene = { path = "../sorot-scene" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 pollster = "0.4"

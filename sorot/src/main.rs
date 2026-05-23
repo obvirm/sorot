@@ -3,6 +3,6 @@ mod scene;
 use sorot_gpu::wgpu_backend::WgpuApp;
 
 fn main() {
-    let demo = scene::demo_scene();
-    pollster::block_on(WgpuApp::run(demo.meshes, demo.sdf));
+    let (meshes, sdf) = scene::build_demo();
+    pollster::block_on(WgpuApp::run(meshes, sdf));
 }

@@ -1771,6 +1771,7 @@ dependencies = [
  "sorot-gpu",
  "sorot-path",
  "sorot-raster",
+ "sorot-scene",
 ]
 
 [[package]]
