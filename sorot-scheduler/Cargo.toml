@@ -1,0 +1,9 @@
+[package]
+name = "sorot-scheduler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sorot-core = { path = "../sorot-core" }
+sorot-raster = { path = "../sorot-raster" }

@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "sorot-core",
+    "sorot-path",
+    "sorot-raster",
+    "sorot-compositor",
+    "sorot-scene",
+    "sorot-gpu",
+    "sorot-scheduler",
+    "sorot",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"

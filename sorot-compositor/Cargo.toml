@@ -1,0 +1,8 @@
+[package]
+name = "sorot-compositor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sorot-core = { path = "../sorot-core" }

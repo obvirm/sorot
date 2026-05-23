@@ -1,0 +1,11 @@
+[package]
+name = "sorot"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sorot-core = { path = "../sorot-core" }
+sorot-path = { path = "../sorot-path" }
+sorot-raster = { path = "../sorot-raster" }
+image = { version = "0.25", default-features = false, features = ["png"] }
