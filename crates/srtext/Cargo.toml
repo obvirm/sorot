@@ -1,0 +1,10 @@
+[package]
+name = "srtext"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+srmath = { path = "../srmath" }
+srpath = { path = "../srpath" }
+srgpu = { path = "../srgpu" }
+srcore = { path = "../srcore" }

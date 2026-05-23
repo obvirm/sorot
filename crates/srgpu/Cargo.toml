@@ -1,0 +1,11 @@
+[package]
+name = "srgpu"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wgpu = "29"
+pollster = "0.4"
+slotmap = "1"
+bytemuck = { version = "1", features = ["derive"] }
+raw-window-handle = "0.6"

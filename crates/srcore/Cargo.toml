@@ -1,0 +1,10 @@
+[package]
+name = "srcore"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+srmath = { path = "../srmath" }
+srgpu = { path = "../srgpu" }
+slotmap = "1"
+wgpu = "29"

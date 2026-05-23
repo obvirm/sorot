@@ -1,0 +1,10 @@
+[package]
+name = "srruntime"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+srcore = { path = "../srcore" }
+srgpu = { path = "../srgpu" }
+srmath = { path = "../srmath" }
+winit = "0.30"
