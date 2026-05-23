@@ -6,13 +6,16 @@ use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{Window, WindowId};
 
+use sorot_core::color::Color;
+use sorot_raster::TriMesh;
+
 use crate::backend::GpuBackend;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
     position: [f32; 2],
-    color: [f32; 3],
+    color: [f32; 4],
 }
 
 impl Vertex {
@@ -28,27 +31,21 @@ impl Vertex {
             wgpu::VertexAttribute {
                 offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                 shader_location: 1,
-                format: wgpu::VertexFormat::Float32x3,
+                format: wgpu::VertexFormat::Float32x4,
             },
         ],
     };
 }
 
-const TRIANGLE_VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0, 0.5], color: [1.0, 0.0, 0.0] },
-    Vertex { position: [-0.5, -0.5], color: [0.0, 0.0, 1.0] },
-    Vertex { position: [0.5, -0.5], color: [0.0, 1.0, 0.0] },
-];
-
 const SHADER: &str = r#"
 @vertex
-fn vs_main(@location(0) pos: vec2<f32>, @location(1) color: vec3<f32>) -> @builtin(position) vec4<f32> {
+fn vs_main(@location(0) pos: vec2<f32>, @location(1) color: vec4<f32>) -> @builtin(position) vec4<f32> {
     return vec4<f32>(pos, 0.0, 1.0);
 }
 
 @fragment
-fn fs_main(@location(1) color: vec3<f32>) -> @location(0) vec4<f32> {
-    return vec4<f32>(color, 1.0);
+fn fs_main(@location(1) color: vec4<f32>) -> @location(0) vec4<f32> {
+    return color;
 }
 "#;
 
@@ -59,8 +56,9 @@ pub struct WgpuBackend {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    num_vertices: u32,
+    vertex_buffer: Option<wgpu::Buffer>,
+    index_buffer: Option<wgpu::Buffer>,
+    index_count: u32,
 }
 
 impl WgpuBackend {
@@ -158,14 +156,6 @@ impl WgpuBackend {
             cache: None,
         });
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("vertex_buffer"),
-            contents: bytemuck::cast_slice(TRIANGLE_VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let num_vertices = TRIANGLE_VERTICES.len() as u32;
-
         Self {
             window,
             surface,
@@ -173,12 +163,79 @@ impl WgpuBackend {
             queue,
             config,
             render_pipeline,
-            vertex_buffer,
-            num_vertices,
+            vertex_buffer: None,
+            index_buffer: None,
+            index_count: 0,
         }
     }
 
-    fn draw_triangle(&mut self) {
+    pub fn upload_meshes(&mut self, meshes: &[(TriMesh, Color)]) {
+        let w = self.config.width as f32;
+        let h = self.config.height as f32;
+
+        let mut all_vertices: Vec<Vertex> = Vec::new();
+        let mut all_indices: Vec<u32> = Vec::new();
+        let mut base_index: u32 = 0;
+
+        for (mesh, color) in meshes {
+            let cf = {
+                let u8 = color.to_premultiplied_u8();
+                [
+                    u8[0] as f32 / 255.0,
+                    u8[1] as f32 / 255.0,
+                    u8[2] as f32 / 255.0,
+                    u8[3] as f32 / 255.0,
+                ]
+            };
+
+            for v in &mesh.vertices {
+                let px = v.x / (w * 0.5) - 1.0;
+                let py = 1.0 - v.y / (h * 0.5);
+                all_vertices.push(Vertex {
+                    position: [px, py],
+                    color: cf,
+                });
+            }
+
+            for idx in &mesh.indices {
+                all_indices.push(base_index + idx);
+            }
+
+            base_index += mesh.vertices.len() as u32;
+        }
+
+        if all_vertices.is_empty() || all_indices.is_empty() {
+            return;
+        }
+
+        self.vertex_buffer = Some(
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("vertex_buffer"),
+                    contents: bytemuck::cast_slice(&all_vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }),
+        );
+
+        self.index_buffer = Some(
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("index_buffer"),
+                    contents: bytemuck::cast_slice(&all_indices),
+                    usage: wgpu::BufferUsages::INDEX,
+                }),
+        );
+
+        self.index_count = all_indices.len() as u32;
+    }
+
+    fn draw(&mut self) {
+        let (Some(ref vertex_buffer), Some(ref index_buffer)) =
+            (&self.vertex_buffer, &self.index_buffer)
+        else {
+            return;
+        };
+
         let output = match self.surface.get_current_texture() {
             Ok(frame) => frame,
             Err(wgpu::SurfaceError::Lost) => {
@@ -220,8 +277,9 @@ impl WgpuBackend {
             });
 
             pass.set_pipeline(&self.render_pipeline);
-            pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            pass.draw(0..self.num_vertices, 0..1);
+            pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..self.index_count, 0, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -243,35 +301,29 @@ impl GpuBackend for WgpuBackend {
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        self.draw_triangle();
+        self.draw();
         Ok(())
     }
 }
 
 pub struct WgpuApp {
     backend: Option<WgpuBackend>,
+    meshes: Vec<(TriMesh, Color)>,
 }
 
 impl WgpuApp {
-    pub fn new() -> Self {
-        Self { backend: None }
-    }
-
-    pub async fn run() {
+    pub async fn run(meshes: Vec<(TriMesh, Color)>) {
         env_logger::init();
         let event_loop = winit::event_loop::EventLoop::new().unwrap();
         event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-        let mut app = Self::new();
+        let mut app = Self {
+            backend: None,
+            meshes,
+        };
         event_loop.run_app(&mut app).unwrap();
     }
-}
 
-impl ApplicationHandler for WgpuApp {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.backend.is_some() {
-            return;
-        }
-
+    fn setup(&mut self, event_loop: &ActiveEventLoop) {
         let window = event_loop
             .create_window(
                 Window::default_attributes()
@@ -280,8 +332,17 @@ impl ApplicationHandler for WgpuApp {
             )
             .expect("failed to create window");
 
-        let backend = pollster::block_on(WgpuBackend::new(window));
+        let mut backend = pollster::block_on(WgpuBackend::new(window));
+        backend.upload_meshes(&self.meshes);
         self.backend = Some(backend);
+    }
+}
+
+impl ApplicationHandler for WgpuApp {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if self.backend.is_none() {
+            self.setup(event_loop);
+        }
     }
 
     fn window_event(

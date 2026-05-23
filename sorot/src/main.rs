@@ -1,5 +1,8 @@
+mod scene;
+
 use sorot_gpu::wgpu_backend::WgpuApp;
 
 fn main() {
-    pollster::block_on(WgpuApp::run());
+    let meshes = scene::demo_scene();
+    pollster::block_on(WgpuApp::run(meshes));
 }
