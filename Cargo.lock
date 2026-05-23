@@ -2033,6 +2033,7 @@ dependencies = [
  "sorot-core",
  "sorot-path",
  "sorot-raster",
+ "sorot-scene",
  "wgpu",
  "winit",
 ]
@@ -2060,6 +2061,7 @@ dependencies = [
  "sorot-compositor",
  "sorot-core",
  "sorot-path",
+ "sorot-raster",
 ]
 
 [[package]]

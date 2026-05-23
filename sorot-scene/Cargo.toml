@@ -7,4 +7,5 @@ license.workspace = true
 [dependencies]
 sorot-core = { path = "../sorot-core" }
 sorot-path = { path = "../sorot-path" }
+sorot-raster = { path = "../sorot-raster" }
 sorot-compositor = { path = "../sorot-compositor" }
