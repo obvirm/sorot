@@ -86,7 +86,7 @@ impl Canvas {
     pub fn finalize(&self) -> DisplayList {
         let mut dl = DisplayList::new();
         let identity = Matrix3x2::identity();
-        for &root in &self.graph.paint_order.clone() {
+        for &root in &self.graph.paint_order {
             if self.graph.nodes[root as usize].parent == u32::MAX {
                 crate::display_list::build_display_list(
                     &self.graph, root, identity, None, &mut dl,

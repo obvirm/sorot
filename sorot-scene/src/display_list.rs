@@ -1,6 +1,5 @@
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::PathVerb;
 
 use crate::graph::{NodeId, NodeKind, SceneGraph, NODE_NULL};
 
@@ -22,8 +21,7 @@ pub struct DrawOval {
 
 #[derive(Debug, Clone)]
 pub struct DrawPath {
-    pub verbs: Vec<PathVerb>,
-    pub points: Vec<Vec2>,
+    pub path_id: u32,
     pub paint: Paint,
     pub transform: Matrix3x2,
 }
@@ -101,14 +99,11 @@ pub fn build_display_list(
             }));
         }
         NodeKind::Path { path_id } => {
-            if let Some(stored) = graph.get_path(path_id) {
-                out.push(DrawCommand::Path(DrawPath {
-                    verbs: stored.verbs.clone(),
-                    points: stored.points.clone(),
-                    paint: paint.clone(),
-                    transform: t,
-                }));
-            }
+            out.push(DrawCommand::Path(DrawPath {
+                path_id,
+                paint: paint.clone(),
+                transform: t,
+            }));
         }
         NodeKind::Group { opacity: _ } | NodeKind::Transform(_) => {}
     }

@@ -1,27 +1,20 @@
 use rayon::prelude::*;
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::{flatten_path, Path, PathCache, PathVerb};
+use sorot_path::{flatten_path, Path, PathVerb};
 use sorot_raster::triangulate;
 use sorot_render::render_ir::{GpuVertex, RenderFrame, RenderPacket};
 
 use crate::display_list::{DisplayList, DrawCommand};
+use crate::graph::SceneGraph;
 
 const TILE_SIZE: u32 = 32;
 
-pub struct Pipeline {
-    pub path_cache: PathCache,
-}
+pub struct Pipeline;
 
 impl Pipeline {
-    pub fn new() -> Self {
-        Self {
-            path_cache: PathCache::new(),
-        }
-    }
-
     pub fn build_frame(
-        &mut self,
+        graph: &SceneGraph,
         dl: &DisplayList,
         screen_width: u32,
         screen_height: u32,
@@ -44,25 +37,24 @@ impl Pipeline {
                         &path, &ov.paint, ov.transform, screen_width, screen_height,
                     )
                 }
-                DrawCommand::Path(dp) => {
-                    let mut path = Path::new();
-                    let mut pi = 0;
-                    for &verb in &dp.verbs {
-                        match verb {
-                            PathVerb::MoveTo => { path.move_to(dp.points[pi]); pi += 1; }
-                            PathVerb::LineTo => { path.line_to(dp.points[pi]); pi += 1; }
-                            PathVerb::QuadTo => { path.quad_to(dp.points[pi], dp.points[pi + 1]); pi += 2; }
-                            PathVerb::CubicTo => {
-                                path.cubic_to(dp.points[pi], dp.points[pi + 1], dp.points[pi + 2]);
-                                pi += 3;
+                DrawCommand::Path(dp) => graph
+                    .get_path(dp.path_id)
+                    .and_then(|stored| {
+                        let mut path = Path::new();
+                        let mut pi = 0;
+                        for &verb in &stored.verbs {
+                            match verb {
+                                PathVerb::MoveTo => { path.move_to(stored.points[pi]); pi += 1; }
+                                PathVerb::LineTo => { path.line_to(stored.points[pi]); pi += 1; }
+                                PathVerb::QuadTo => { path.quad_to(stored.points[pi], stored.points[pi + 1]); pi += 2; }
+                                PathVerb::CubicTo => { path.cubic_to(stored.points[pi], stored.points[pi + 1], stored.points[pi + 2]); pi += 3; }
+                                PathVerb::Close => { path.close(); }
                             }
-                            PathVerb::Close => { path.close(); }
                         }
-                    }
-                    Self::shape_to_packet_static(
-                        &path, &dp.paint, dp.transform, screen_width, screen_height,
-                    )
-                }
+                        Self::shape_to_packet_static(
+                            &path, &dp.paint, dp.transform, screen_width, screen_height,
+                        )
+                    }),
             })
             .collect();
 
@@ -131,9 +123,7 @@ impl Pipeline {
 }
 
 impl Default for Pipeline {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self }
 }
 
 #[cfg(test)]
@@ -153,14 +143,14 @@ mod tests {
 
     #[test]
     fn test_build_frame() {
-        let mut p = Pipeline::new();
+        let mut graph = SceneGraph::new();
         let mut dl = DisplayList::new();
         dl.commands.push(DrawCommand::Rect(DrawRect {
             rect: Rect::new(Vec2::new(10.0, 10.0), Vec2::new(200.0, 200.0)),
             paint: Paint::fill(Color::BLUE),
             transform: Matrix3x2::identity(),
         }));
-        let frame = p.build_frame(&dl, 800, 600);
+        let frame = Pipeline::build_frame(&graph, &dl, 800, 600);
         assert!(frame.non_empty_tiles() > 0);
     }
 }

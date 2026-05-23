@@ -23,9 +23,9 @@ pub fn build_frame() -> RenderFrame {
     canvas.draw_path(&rr);
 
     let dl = canvas.finalize();
+    let graph = canvas.graph();
 
-    let mut pipeline = Pipeline::new();
-    let mut frame = pipeline.build_frame(&dl, 800, 600);
+    let mut frame = Pipeline::build_frame(graph, &dl, 800, 600);
 
     let circle = Path::circle(Vec2::new(200.0, 300.0), 140.0);
     let flat = flatten_path(&circle, 0.5);
