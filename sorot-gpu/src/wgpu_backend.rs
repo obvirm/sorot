@@ -390,30 +390,30 @@ impl WgpuBackend {
 
         for pass_def in &graph.passes {
             match &pass_def.kind {
-                PassKind::Shape { packet_ids, target_id } => {
+                PassKind::Shape { tile_groups, target_id } => {
                     let rt = self.texture_pool.get(*target_id);
                     let mut all_verts: Vec<RawVertex> = Vec::new();
                     let mut all_idx: Vec<u32> = Vec::new();
-                    let mut first_idx_offsets: Vec<(usize, u32)> = Vec::new();
+                    let mut draw_ranges: Vec<(usize, u32)> = Vec::new();
                     let mut base_v: u32 = 0;
 
-                    for &id in packet_ids {
-                        let pkt = frame.get_packet(id);
-                        if pkt.indices.is_empty() { continue; }
-                        let start_idx = all_idx.len();
-                        let count = pkt.indices.len() as u32;
-                        all_verts.extend(pkt.vertices.iter().map(|v| RawVertex {
-                            position: [v.clip_x, v.clip_y],
-                            color: [v.r, v.g, v.b, v.a],
-                        }));
-                        all_idx.extend(pkt.indices.iter().map(|i| base_v + i));
-                        first_idx_offsets.push((start_idx, count));
-                        base_v += pkt.vertices.len() as u32;
+                    for group in tile_groups {
+                        for &id in &group.packet_ids {
+                            let pkt = frame.get_packet(id);
+                            if pkt.indices.is_empty() { continue; }
+                            let start = all_idx.len();
+                            let n = pkt.indices.len() as u32;
+                            all_verts.extend(pkt.vertices.iter().map(|v| RawVertex {
+                                position: [v.clip_x, v.clip_y],
+                                color: [v.r, v.g, v.b, v.a],
+                            }));
+                            all_idx.extend(pkt.indices.iter().map(|i| base_v + i));
+                            draw_ranges.push((start, n));
+                            base_v += pkt.vertices.len() as u32;
+                        }
                     }
 
-                    if all_verts.is_empty() || all_idx.is_empty() {
-                        continue;
-                    }
+                    if all_verts.is_empty() { continue; }
 
                     let vbytes = bytemuck::cast_slice(&all_verts);
                     let ibytes = bytemuck::cast_slice(&all_idx);
@@ -421,8 +421,7 @@ impl WgpuBackend {
                     if vbytes.len() as u64 > self.shape_vb_cap {
                         self.shape_vb_cap = (vbytes.len() as u64).max(self.shape_vb_cap * 2);
                         self.shape_vb = self.device.create_buffer(&wgpu::BufferDescriptor {
-                            label: Some("shape_vb"),
-                            size: self.shape_vb_cap,
+                            label: Some("shape_vb"), size: self.shape_vb_cap,
                             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
                             mapped_at_creation: false,
                         });
@@ -430,8 +429,7 @@ impl WgpuBackend {
                     if ibytes.len() as u64 > self.shape_ib_cap {
                         self.shape_ib_cap = (ibytes.len() as u64).max(self.shape_ib_cap * 2);
                         self.shape_ib = self.device.create_buffer(&wgpu::BufferDescriptor {
-                            label: Some("shape_ib"),
-                            size: self.shape_ib_cap,
+                            label: Some("shape_ib"), size: self.shape_ib_cap,
                             usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
                             mapped_at_creation: false,
                         });
@@ -443,22 +441,19 @@ impl WgpuBackend {
                     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: Some("shape_pass"),
                         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                            view: &rt.view,
-                            resolve_target: None,
+                            view: &rt.view, resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
                                 store: wgpu::StoreOp::Store,
                             },
                         })],
-                        depth_stencil_attachment: None,
-                        timestamp_writes: None,
-                        occlusion_query_set: None,
+                        depth_stencil_attachment: None, timestamp_writes: None, occlusion_query_set: None,
                     });
                     pass.set_pipeline(&self.color_pipeline);
                     pass.set_vertex_buffer(0, self.shape_vb.slice(..));
                     pass.set_index_buffer(self.shape_ib.slice(..), wgpu::IndexFormat::Uint32);
-                    for (start_idx, count) in &first_idx_offsets {
-                        pass.draw_indexed(*start_idx as u32..*start_idx as u32 + count, 0, 0..1);
+                    for (start, count) in &draw_ranges {
+                        pass.draw_indexed(*start as u32..*start as u32 + count, 0, 0..1);
                     }
                 }
 

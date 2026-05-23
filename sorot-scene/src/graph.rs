@@ -14,6 +14,7 @@ pub struct StoredPath {
     pub verbs: Vec<PathVerb>,
     pub points: Vec<Vec2>,
     pub mesh: TriMesh,
+    pub bounds: Rect,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -63,10 +64,22 @@ impl SceneGraph {
         let id = self.paths.len() as PathId;
         let flat = flatten_path(path, 0.5);
         let mesh = triangulate(&flat);
+        let bounds = if mesh.vertices.is_empty() {
+            Rect::zero()
+        } else {
+            let mut min = mesh.vertices[0];
+            let mut max = mesh.vertices[0];
+            for v in &mesh.vertices[1..] {
+                min = min.min(*v);
+                max = max.max(*v);
+            }
+            Rect::new(min, max)
+        };
         self.paths.push(StoredPath {
             verbs: path.verbs().to_vec(),
             points: path.points().to_vec(),
             mesh,
+            bounds,
         });
         id
     }
@@ -115,21 +128,9 @@ impl SceneGraph {
                 Vec2::new(center.x + rx, center.y + ry),
             ),
             NodeKind::Path { path_id } => {
-                if let Some(stored) = self.get_path(path_id) {
-                    if stored.points.is_empty() {
-                        Rect::zero()
-                    } else {
-                        let mut min = stored.points[0];
-                        let mut max = stored.points[0];
-                        for p in &stored.points[1..] {
-                            min = min.min(*p);
-                            max = max.max(*p);
-                        }
-                        Rect::new(min, max)
-                    }
-                } else {
-                    Rect::zero()
-                }
+                self.get_path(path_id)
+                    .map(|s| s.bounds)
+                    .unwrap_or(Rect::zero())
             }
             NodeKind::Group { .. } | NodeKind::Transform(_) => Rect::zero(),
         };

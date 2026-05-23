@@ -1,9 +1,18 @@
 use sorot_render::render_ir::{PacketId, RenderFrame, SdfOp};
 
+/// A tile-row group: all packets for tiles in one row, deduplicated.
+/// This preserves tile locality through the pass graph so the GPU
+/// sees consecutive draws from the same screen region.
+#[derive(Debug, Clone)]
+pub struct TileRowGroup {
+    pub row: u32,
+    pub packet_ids: Vec<PacketId>,
+}
+
 #[derive(Debug, Clone)]
 pub enum PassKind {
     Shape {
-        packet_ids: Vec<PacketId>,
+        tile_groups: Vec<TileRowGroup>,
         target_id: usize,
     },
     Sdf {
@@ -34,21 +43,31 @@ impl PassGraph {
         sdf_target: usize,
     ) -> Self {
         let mut passes = Vec::new();
-
         let mut seen = vec![false; frame.packet_arena.len()];
-        let mut packet_ids: Vec<PacketId> = Vec::new();
-        for tile in &frame.tiles {
-            for &id in &tile.packet_ids {
-                if !seen[id as usize] {
-                    seen[id as usize] = true;
-                    packet_ids.push(id);
+        let rows = frame.rows();
+        let mut tile_groups: Vec<TileRowGroup> = Vec::with_capacity(rows as usize);
+
+        for row in 0..rows {
+            let mut row_ids = Vec::new();
+            for col in 0..frame.cols() {
+                let idx = (row * frame.cols() + col) as usize;
+                if idx < frame.tiles.len() {
+                    for &pid in &frame.tiles[idx].packet_ids {
+                        if !seen[pid as usize] {
+                            seen[pid as usize] = true;
+                            row_ids.push(pid);
+                        }
+                    }
                 }
+            }
+            if !row_ids.is_empty() {
+                tile_groups.push(TileRowGroup { row, packet_ids: row_ids });
             }
         }
 
-        if !packet_ids.is_empty() {
+        if !tile_groups.is_empty() {
             passes.push(RenderPass {
-                kind: PassKind::Shape { packet_ids, target_id: shape_target },
+                kind: PassKind::Shape { tile_groups, target_id: shape_target },
                 label: "shape".into(),
             });
         }
