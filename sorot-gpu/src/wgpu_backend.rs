@@ -370,7 +370,7 @@ impl WgpuBackend {
 
         for pass_def in &graph.passes {
             match &pass_def.kind {
-                PassKind::Shape { packets, target_id } => {
+                PassKind::Shape { packet_ids, target_id } => {
                     let rt = self.texture_pool.get(*target_id);
                     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: Some("shape_pass"),
@@ -387,7 +387,8 @@ impl WgpuBackend {
                         occlusion_query_set: None,
                     });
                     pass.set_pipeline(&self.color_pipeline);
-                    for pkt in packets {
+                    for &id in packet_ids {
+                        let pkt = frame.get_packet(id);
                         if pkt.indices.is_empty() { continue; }
                         let verts: Vec<RawVertex> = pkt.vertices.iter().map(|v| RawVertex {
                             position: [v.clip_x, v.clip_y],

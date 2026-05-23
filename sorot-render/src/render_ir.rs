@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sorot_compositor::blend::BlendMode;
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
@@ -15,30 +13,31 @@ pub struct GpuVertex {
     pub a: f32,
 }
 
+pub type PacketId = u32;
+
 /// A batch of triangles sharing one paint + transform.
-/// Arc-wrapped so tiles can share references without cloning payload.
 #[derive(Debug, Clone)]
 pub struct RenderPacket {
-    pub vertices: Arc<[GpuVertex]>,
-    pub indices: Arc<[u32]>,
+    pub vertices: Box<[GpuVertex]>,
+    pub indices: Box<[u32]>,
     pub paint: Paint,
     pub transform: Matrix3x2,
     pub clip_rect: Rect,
 }
 
-/// A screen-space tile referencing packets that intersect it.
+/// A screen-space tile referencing packets by index.
 #[derive(Debug, Clone)]
 pub struct TilePacket {
     pub col: u32,
     pub row: u32,
     pub rect: Rect,
-    pub packets: Vec<Arc<RenderPacket>>,
+    pub packet_ids: Vec<PacketId>,
 }
 
 /// SDF glyph upload operation.
 #[derive(Debug, Clone)]
 pub struct SdfOp {
-    pub sdf_data: Arc<[u8]>,
+    pub sdf_data: Box<[u8]>,
     pub sdf_width: u32,
     pub sdf_height: u32,
     pub bounds: Rect,
@@ -57,6 +56,7 @@ pub struct CompositeOp {
 /// The complete render IR for a frame.
 #[derive(Debug, Clone)]
 pub struct RenderFrame {
+    pub packet_arena: Vec<RenderPacket>,
     pub tiles: Vec<TilePacket>,
     pub sdf_ops: Vec<SdfOp>,
     pub composite_ops: Vec<CompositeOp>,
@@ -83,12 +83,13 @@ impl RenderFrame {
                             ((row + 1) * tile_size).min(screen_height) as f32,
                         ),
                     ),
-                    packets: Vec::new(),
+                    packet_ids: Vec::new(),
                 });
             }
         }
 
         Self {
+            packet_arena: Vec::new(),
             tiles,
             sdf_ops: Vec::new(),
             composite_ops: Vec::new(),
@@ -111,10 +112,12 @@ impl RenderFrame {
         &mut self.tiles[idx]
     }
 
-    /// Bin a packet into all tiles it overlaps. Uses Arc for zero-copy sharing.
+    /// Insert a packet into the arena and bin its ID into overlapping tiles.
     pub fn bin_packet(&mut self, packet: RenderPacket) {
-        let shared = Arc::new(packet);
-        let clip = shared.clip_rect;
+        let id = self.packet_arena.len() as PacketId;
+        let clip = packet.clip_rect;
+        self.packet_arena.push(packet);
+
         let ts = self.tile_size as f32;
         let start_col = (clip.min.x.max(0.0) / ts).floor() as u32;
         let start_row = (clip.min.y.max(0.0) / ts).floor() as u32;
@@ -123,13 +126,16 @@ impl RenderFrame {
 
         for row in start_row..end_row {
             for col in start_col..end_col {
-                self.tile_at_mut(col, row).packets.push(Arc::clone(&shared));
+                self.tile_at_mut(col, row).packet_ids.push(id);
             }
         }
     }
 
-    /// Count total non-empty tiles.
+    pub fn get_packet(&self, id: PacketId) -> &RenderPacket {
+        &self.packet_arena[id as usize]
+    }
+
     pub fn non_empty_tiles(&self) -> usize {
-        self.tiles.iter().filter(|t| !t.packets.is_empty()).count()
+        self.tiles.iter().filter(|t| !t.packet_ids.is_empty()).count()
     }
 }

@@ -10,3 +10,4 @@ sorot-path = { path = "../sorot-path" }
 sorot-raster = { path = "../sorot-raster" }
 sorot-render = { path = "../sorot-render" }
 sorot-compositor = { path = "../sorot-compositor" }
+rayon = "1"

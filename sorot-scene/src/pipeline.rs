@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
+use rayon::prelude::*;
 use sorot_core::math::{Matrix3x2, Rect, Vec2};
 use sorot_core::paint::Paint;
-use sorot_path::{Path, PathCache, PathVerb};
+use sorot_path::{flatten_path, Path, PathCache, PathVerb};
 use sorot_raster::triangulate;
-use sorot_render::render_ir::{GpuVertex, RenderFrame, RenderPacket, SdfOp};
+use sorot_render::render_ir::{GpuVertex, RenderFrame, RenderPacket};
 
 use crate::display_list::{DisplayList, DrawCommand};
 
@@ -29,71 +28,59 @@ impl Pipeline {
     ) -> RenderFrame {
         let mut frame = RenderFrame::new(screen_width, screen_height, TILE_SIZE);
 
-        for cmd in &dl.commands {
-            match cmd {
+        let packets: Vec<Option<RenderPacket>> = dl
+            .commands
+            .par_iter()
+            .map(|cmd| match cmd {
                 DrawCommand::Rect(dr) => {
                     let path = Path::rect(dr.rect.min, dr.rect.max);
-                    if let Some(packet) = self.shape_to_packet(
+                    Self::shape_to_packet_static(
                         &path, &dr.paint, dr.transform, screen_width, screen_height,
-                    ) {
-                        frame.bin_packet(packet);
-                    }
+                    )
                 }
                 DrawCommand::Oval(ov) => {
                     let path = Path::oval(ov.center, ov.rx, ov.ry);
-                    if let Some(packet) = self.shape_to_packet(
+                    Self::shape_to_packet_static(
                         &path, &ov.paint, ov.transform, screen_width, screen_height,
-                    ) {
-                        frame.bin_packet(packet);
-                    }
+                    )
                 }
                 DrawCommand::Path(dp) => {
                     let mut path = Path::new();
                     let mut pi = 0;
                     for &verb in &dp.verbs {
                         match verb {
-                            sorot_path::PathVerb::MoveTo => {
-                                path.move_to(dp.points[pi]);
-                                pi += 1;
-                            }
-                            sorot_path::PathVerb::LineTo => {
-                                path.line_to(dp.points[pi]);
-                                pi += 1;
-                            }
-                            sorot_path::PathVerb::QuadTo => {
-                                path.quad_to(dp.points[pi], dp.points[pi + 1]);
-                                pi += 2;
-                            }
-                            sorot_path::PathVerb::CubicTo => {
+                            PathVerb::MoveTo => { path.move_to(dp.points[pi]); pi += 1; }
+                            PathVerb::LineTo => { path.line_to(dp.points[pi]); pi += 1; }
+                            PathVerb::QuadTo => { path.quad_to(dp.points[pi], dp.points[pi + 1]); pi += 2; }
+                            PathVerb::CubicTo => {
                                 path.cubic_to(dp.points[pi], dp.points[pi + 1], dp.points[pi + 2]);
                                 pi += 3;
                             }
-                            sorot_path::PathVerb::Close => {
-                                path.close();
-                            }
+                            PathVerb::Close => { path.close(); }
                         }
                     }
-                    if let Some(packet) = self.shape_to_packet(
+                    Self::shape_to_packet_static(
                         &path, &dp.paint, dp.transform, screen_width, screen_height,
-                    ) {
-                        frame.bin_packet(packet);
-                    }
+                    )
                 }
-            }
+            })
+            .collect();
+
+        for packet in packets.into_iter().flatten() {
+            frame.bin_packet(packet);
         }
 
         frame
     }
 
-    fn shape_to_packet(
-        &mut self,
+    fn shape_to_packet_static(
         path: &Path,
         paint: &Paint,
         transform: Matrix3x2,
         screen_w: u32,
         screen_h: u32,
     ) -> Option<RenderPacket> {
-        let flat = self.path_cache.get_or_flatten(path, 0.5).clone();
+        let flat = flatten_path(path, 0.5);
         let mesh = triangulate(&flat);
 
         if mesh.indices.is_empty() {
@@ -102,19 +89,11 @@ impl Pipeline {
 
         let cf = {
             let u8 = paint.color.to_premultiplied_u8();
-            [
-                u8[0] as f32 / 255.0,
-                u8[1] as f32 / 255.0,
-                u8[2] as f32 / 255.0,
-                u8[3] as f32 / 255.0,
-            ]
+            [u8[0] as f32 / 255.0, u8[1] as f32 / 255.0, u8[2] as f32 / 255.0, u8[3] as f32 / 255.0]
         };
 
         let hw = screen_w as f32 * 0.5;
         let hh = screen_h as f32 * 0.5;
-
-        let mut min = Vec2::new(f32::MAX, f32::MAX);
-        let mut max = Vec2::new(f32::MIN, f32::MIN);
 
         let vertices: Vec<GpuVertex> = mesh
             .vertices
@@ -123,26 +102,30 @@ impl Pipeline {
                 let p = transform.transform_point(*v);
                 let cx = p.x / hw - 1.0;
                 let cy = 1.0 - p.y / hh;
-                min = min.min(p);
-                max = max.max(p);
-                GpuVertex {
-                    clip_x: cx, clip_y: cy,
-                    r: cf[0], g: cf[1], b: cf[2], a: cf[3],
-                }
+                GpuVertex { clip_x: cx, clip_y: cy, r: cf[0], g: cf[1], b: cf[2], a: cf[3] }
             })
             .collect();
 
-        let clip_rect = Rect::new(min, max).intersect(Rect::new(
-            Vec2::new(0.0, 0.0),
-            Vec2::new(screen_w as f32, screen_h as f32),
-        ));
+        let (min, max) = {
+            let mut min = Vec2::new(f32::MAX, f32::MAX);
+            let mut max = Vec2::new(f32::MIN, f32::MIN);
+            for v in &mesh.vertices {
+                let p = transform.transform_point(*v);
+                min = min.min(p);
+                max = max.max(p);
+            }
+            (min, max)
+        };
 
         Some(RenderPacket {
-            vertices: Arc::from(vertices.into_boxed_slice()),
-            indices: Arc::from(mesh.indices.into_boxed_slice()),
+            vertices: vertices.into_boxed_slice(),
+            indices: mesh.indices.into_boxed_slice(),
             paint: paint.clone(),
             transform,
-            clip_rect,
+            clip_rect: Rect::new(min, max).intersect(Rect::new(
+                Vec2::new(0.0, 0.0),
+                Vec2::new(screen_w as f32, screen_h as f32),
+            )),
         })
     }
 }
@@ -161,9 +144,8 @@ mod tests {
 
     #[test]
     fn test_shape_to_packet() {
-        let mut p = Pipeline::new();
         let path = Path::rect(Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0));
-        let packet = p.shape_to_packet(
+        let packet = Pipeline::shape_to_packet_static(
             &path, &Paint::fill(Color::RED), Matrix3x2::identity(), 800, 600,
         );
         assert!(packet.is_some());

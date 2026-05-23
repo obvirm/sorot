@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use sorot_core::color::Color;
 use sorot_core::math::{Rect, Vec2};
 use sorot_core::paint::Paint;
@@ -34,7 +32,7 @@ pub fn build_frame() -> RenderFrame {
     let (sdf_pixels, sdf_rect, sdf_w, sdf_h) = compute_sdf(&flat, 128, 0.15);
 
     frame.sdf_ops.push(SdfOp {
-        sdf_data: Arc::from(sdf_pixels.into_boxed_slice()),
+        sdf_data: sdf_pixels.into_boxed_slice(),
         sdf_width: sdf_w,
         sdf_height: sdf_h,
         bounds: sdf_rect,

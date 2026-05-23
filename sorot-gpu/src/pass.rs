@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
-use sorot_render::render_ir::{RenderFrame, RenderPacket, SdfOp};
+use sorot_render::render_ir::{RenderFrame, RenderPacket, PacketId, SdfOp};
 
 /// A unit of GPU work — renders to a target, optionally reads from inputs.
 #[derive(Debug, Clone)]
 pub enum PassKind {
     /// Render triangulated shapes to a color attachment.
+    /// Packets are referenced by ID from the frame's packet arena.
     Shape {
-        packets: Vec<Arc<RenderPacket>>,
+        packet_ids: Vec<PacketId>,
         target_id: usize,
     },
     Sdf {
@@ -41,16 +40,18 @@ impl PassGraph {
     ) -> Self {
         let mut passes = Vec::new();
 
-        let all_packets: Vec<Arc<RenderPacket>> = frame
+        let mut packet_ids: Vec<PacketId> = frame
             .tiles
             .iter()
-            .flat_map(|t| t.packets.iter().map(Arc::clone))
+            .flat_map(|t| t.packet_ids.iter().copied())
             .collect();
+        packet_ids.sort();
+        packet_ids.dedup();
 
-        if !all_packets.is_empty() {
+        if !packet_ids.is_empty() {
             passes.push(RenderPass {
                 kind: PassKind::Shape {
-                    packets: all_packets,
+                    packet_ids,
                     target_id: shape_target,
                 },
                 label: "shape".into(),
