@@ -5,11 +5,11 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-sorot-core = { path = "../sorot-core" }
-sorot-path = { path = "../sorot-path" }
-sorot-raster = { path = "../sorot-raster" }
-sorot-gpu = { path = "../sorot-gpu" }
-sorot-scene = { path = "../sorot-scene" }
-sorot-render = { path = "../sorot-render" }
+srcore = { path = "../crates/srcore" }
+srpath = { path = "../crates/srpath" }
+srraster = { path = "../crates/srraster" }
+srgpu = { path = "../crates/srgpu" }
+srscene = { path = "../crates/srscene" }
+srrender = { path = "../crates/srrender" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 pollster = "0.4"

@@ -2003,84 +2003,12 @@ version = "0.1.0"
 dependencies = [
  "image",
  "pollster",
- "sorot-core",
- "sorot-gpu",
- "sorot-path",
- "sorot-raster",
- "sorot-render",
- "sorot-scene",
-]
-
-[[package]]
-name = "sorot-compositor"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "sorot-core",
-]
-
-[[package]]
-name = "sorot-core"
-version = "0.1.0"
-
-[[package]]
-name = "sorot-gpu"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "env_logger",
- "log",
- "pollster",
- "sorot-core",
- "sorot-path",
- "sorot-raster",
- "sorot-render",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "sorot-path"
-version = "0.1.0"
-dependencies = [
- "sorot-core",
-]
-
-[[package]]
-name = "sorot-raster"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "sorot-core",
- "sorot-path",
-]
-
-[[package]]
-name = "sorot-render"
-version = "0.1.0"
-dependencies = [
- "sorot-compositor",
- "sorot-core",
-]
-
-[[package]]
-name = "sorot-scene"
-version = "0.1.0"
-dependencies = [
- "sorot-compositor",
- "sorot-core",
- "sorot-path",
- "sorot-raster",
- "sorot-render",
-]
-
-[[package]]
-name = "sorot-scheduler"
-version = "0.1.0"
-dependencies = [
- "rayon",
- "sorot-core",
- "sorot-raster",
+ "srcore",
+ "srgpu",
+ "srpath",
+ "srraster",
+ "srrender",
+ "srscene",
 ]
 
 [[package]]
@@ -2090,6 +2018,78 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eda41003dc44290527a59b13432d4a0379379fa074b70174882adfbdfd917844"
 dependencies = [
  "bitflags 2.11.1",
+]
+
+[[package]]
+name = "srcompositor"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "srcore",
+]
+
+[[package]]
+name = "srcore"
+version = "0.1.0"
+
+[[package]]
+name = "srgpu"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "env_logger",
+ "log",
+ "pollster",
+ "srcore",
+ "srpath",
+ "srraster",
+ "srrender",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
+name = "srpath"
+version = "0.1.0"
+dependencies = [
+ "srcore",
+]
+
+[[package]]
+name = "srraster"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "srcore",
+ "srpath",
+]
+
+[[package]]
+name = "srrender"
+version = "0.1.0"
+dependencies = [
+ "srcompositor",
+ "srcore",
+]
+
+[[package]]
+name = "srscene"
+version = "0.1.0"
+dependencies = [
+ "srcompositor",
+ "srcore",
+ "srpath",
+ "srraster",
+ "srrender",
+]
+
+[[package]]
+name = "srscheduler"
+version = "0.1.0"
+dependencies = [
+ "rayon",
+ "srcore",
+ "srraster",
 ]
 
 [[package]]

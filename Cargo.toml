@@ -1,14 +1,14 @@
 [workspace]
 members = [
-    "sorot-core",
-    "sorot-path",
-    "sorot-raster",
-    "sorot-compositor",
-    "sorot-render",
-    "sorot-scene",
-    "sorot-gpu",
-    "sorot-scheduler",
     "sorot",
+    "crates/srcore",
+    "crates/srpath",
+    "crates/srraster",
+    "crates/srcompositor",
+    "crates/srrender",
+    "crates/srscene",
+    "crates/srgpu",
+    "crates/srscheduler",
 ]
 resolver = "2"
 

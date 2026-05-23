@@ -1,0 +1,15 @@
+[package]
+name = "srcompositor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srcore = { path = "../srcore" }
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "blend"
+harness = false

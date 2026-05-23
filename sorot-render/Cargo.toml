@@ -1,9 +1,0 @@
-[package]
-name = "sorot-render"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-
-[dependencies]
-sorot-core = { path = "../sorot-core" }
-sorot-compositor = { path = "../sorot-compositor" }

@@ -1,429 +1,366 @@
-Oke. Kamu mau bikin 2D graphics engine yang bukan cuma “setara Skia”, tapi *ngincer tahta*, ditulis dari nol di Rust, dan tetap waras cukup lama buat shipping. Ambisius. Lumayan, dunia memang butuh satu lagi proyek “aku bisa bikin renderer sendiri”.
+Membangun 2D graphics engine dari nol yang bisa “ngusir Skia dari arena” itu bukan soal semangat, tapi soal desain sistem yang brutal, disiplin, dan ngerti persis kenapa Skia menang di tempat pertama: pipeline matang + caching + GPU backend yang licin.
 
-Kita bongkar jadi sistem yang benar-benar bisa dibangun, bukan sekadar teori cosplay.
-
----
-
-# 0. Target Realistis tapi Brutal
-
-Kalau mau ngalahin Skia, kamu tidak boleh cuma bikin “vector + rasterizer”.
-
-Kamu butuh 5 lapisan inti:
-
-1. **Scene Graph + API Layer**
-2. **Path / Vector Engine**
-3. **Rasterization Core (CPU + GPU)**
-4. **Compositing & Effects Engine**
-5. **Backend Abstraction (Vulkan/Metal/OpenGL/WebGPU)**
-
-Dan satu hal yang Skia kadang masih setengah hati:
-
-> **Predictable performance under worst-case content**
-
-Itu targetmu.
+Kalau kamu mau serius bikin engine Rust yang kompetitif (bukan sekadar “hello triangle tapi 2D”), ini blueprint level sistemnya.
 
 ---
 
-# 1. Arsitektur Besar (High Level)
+# 1. Target Realistis (biar gak delusi dulu sebentar)
 
-Bayangkan pipeline ini:
+Kita bagi 3 level, karena “langsung lawan Skia” tanpa tahap itu cuma cara cepat buat bikin repo kosong yang kamu banggakan sendiri.
+
+### Level 1 — Core Raster Engine (CPU)
+
+* Path rendering 2D
+* Text rendering dasar
+* Compositing
+* Image decode + filtering
+
+### Level 2 — GPU Acceleration Layer
+
+* Vector -> GPU tessellation
+* Texture atlas system
+* Batched rendering
+
+### Level 3 — Advanced Frontend Engine
+
+* Retained UI scene graph
+* Incremental layout system
+* Subpixel AA + hinting
+* Multi-threaded render graph
+
+---
+
+# 2. Arsitektur Besar (yang Skia pakai, tapi kita bedah jadi modular)
+
+## PIPELINE UTAMA
 
 ```
-App API (Rust DSL / Canvas-like API)
-        ↓
-Scene Graph (immutable DAG)
-        ↓
-Display List (flattened commands)
-        ↓
-Tiling System (screen split into buckets)
-        ↓
-Raster Worker Pool (CPU SIMD + GPU compute)
-        ↓
-Compositor (blend, filters, layers)
-        ↓
-Present (swapchain)
+Scene Graph
+   ↓
+Layout Engine
+   ↓
+Display List (command buffer)
+   ↓
+Tessellation / Rasterization
+   ↓
+Render Backend (CPU / GPU)
+   ↓
+Compositing + Output
 ```
 
 ---
 
-# 2. Core Design Philosophy (yang membedakan engine kuat vs “sekadar renderer”)
+# 3. CORE ARCHITECTURE (Rust-friendly design)
 
-## A. Data-oriented, bukan object-oriented
+## 3.1 Scene Graph (Immutable DAG)
 
-Semua node harus:
-
-* flat struct
-* arena allocated
-* no virtual dispatch di hot path
-
-Rust cocok banget di sini.
-
-## B. Command batching ekstrem
-
-Jangan render “per object”.
-
-Kamu render:
-
-> per tile + per pipeline state
-
----
-
-# 3. Path Rendering (bagian paling penting)
-
-Ini jantung kompetisi Skia.
-
-## 3.1 Representasi Path
-
-Gunakan:
-
-* Cubic Bézier curves
-* Line segments
-* Arc converted to cubic
-
-Struktur:
+Gunakan DAG, bukan tree bodoh.
 
 ```rust
-enum PathVerb {
-    MoveTo,
-    LineTo,
-    QuadTo,
-    CubicTo,
-    Close,
+enum Node {
+    Shape(Shape),
+    Text(Text),
+    Image(Image),
+    Group(Transform, Vec<NodeId>),
 }
 ```
 
-Tapi itu masih high-level.
+### Kenapa DAG?
 
-### Internal representation (lebih penting):
+* reuse sub-tree
+* caching render result
+* incremental updates
 
-Convert semua ke:
+Skia menang di sini karena mereka caching agresif.
 
-> **flattened monotonic cubic segments**
+---
 
-Kenapa?
+## 3.2 Transform System (Matematika inti)
 
-* lebih gampang rasterisasi
+Semua objek pakai homogeneous coordinate 2D:
+
+\begin{bmatrix} x' \ y' \ 1 \end{bmatrix} = \begin{bmatrix} a & b & t_x \ c & d & t_y \ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \ y \ 1 \end{bmatrix}
+
+Transform stack harus:
+
+* composable
 * SIMD-friendly
-* deterministic
+* cacheable per node
 
 ---
 
-## 3.2 Tessellation Strategy (2 opsi frontier)
+## 3.3 Layout Engine (anti Skia weakness area)
 
-### Opsi 1: GPU Tessellation (modern)
+Gunakan **Yoga-like constraint solver + incremental layout DAG**
 
-* triangulate path di compute shader
-* gunakan ear clipping / monotone partition
+Algoritma:
 
-### Opsi 2 (lebih kuat): Hybrid SDF path rendering
+* Flexbox constraints → constraint propagation
+* Top-down + bottom-up passes
+* Dirty region tracking
+
+Optimasi:
+
+* constraint caching
+* partial recompute only subtree berubah
+
+---
+
+# 4. RASTERIZATION ENGINE (inti perang sebenarnya)
+
+## 4.1 Path Representation
 
 Gunakan:
 
-> Signed Distance Field (SDF) untuk vector anti-aliasing
+* cubic bézier curves
+* quadratic curves
+* line segments
 
-Formula dasar:
+Bezier:
 
-```
-d(p) = min distance point p ke edge path
-```
-
-Render rule:
-
-```
-alpha = smoothstep(-ε, +ε, d(p))
-```
-
-Ini yang bikin text & icon super clean di resolution arbitrary.
+B(t) = (1-t)^3P_0 + 3(1-t)^2tP_1 + 3(1-t)t^2P_2 + t^3P_3
 
 ---
 
-## 4. Rasterization Engine (CPU + SIMD + Tile-based)
+## 4.2 Tessellation Strategy (kunci performa)
 
-## 4.1 Tile System (ini wajib kalau mau performa Skia-level)
+Jangan naive scanline dulu.
 
-Split screen:
+Gunakan hybrid:
 
-* 16x16 atau 32x32 pixel tiles
+### Stage A: Adaptive subdivision
 
-Each tile:
+* flatten curve berdasarkan curvature error
 
-* independent job
+Error metric:
+
+* distance curve vs chord
+* subdivide if > epsilon
+
+### Stage B: monotone polygon decomposition
+
+* convert path → monotone pieces
+* triangulate with sweep line
+
+Algoritma:
+
+* Seidel triangulation (fast, robust)
+* or ear clipping (fallback)
+
+---
+
+## 4.3 Anti-aliasing (ini yang bikin “terlihat mahal”)
+
+Gunakan:
+
+### Coverage-based AA
+
+* compute pixel coverage area analytically
+
+Atau:
+
+### MSAA hybrid + analytic edges
+
+Edge equation:
+
+f(x,y) = ax + by + c
+
+Pixel intensity = integral coverage over f(x,y)
+
+---
+
+# 5. RENDER BACKEND
+
+## 5.1 CPU Backend
+
+* tile-based rasterizer
+* SIMD (AVX2 / NEON)
+* span-based filling
+
+Tile system:
+
+* 8x8 or 16x16 tiles
 * cache-friendly
-* thread-safe
 
 ---
 
-## 4.2 Raster algorithm
-
-Gunakan:
-
-### Conservative scanline + coverage buffer
+## 5.2 GPU Backend (wajib kalau mau “kompetitif”)
 
 Pipeline:
 
-1. Sort edges per tile
-2. Build edge table
-3. Scanline fill
-4. Compute coverage per pixel
+1. path → mesh (GPU friendly)
+2. upload vertex buffer
+3. instanced draw calls
+4. fragment shader AA
 
-Optimisasi:
+Tech:
 
-* SIMD (AVX2 / NEON)
-* fixed-point math (avoid float branch chaos)
-
----
-
-## 4.3 Anti-aliasing
-
-3 level:
-
-* MSAA (GPU)
-* Coverage-based AA (CPU)
-* SDF fallback (vector text/icon)
+* Vulkan (no excuses)
+* wgpu abstraction (Rust ecosystem friendly)
 
 ---
 
-# 5. Compositing Engine (yang sering diremehkan orang tolol)
+# 6. TEXT RENDERING (tempat engine biasanya mati)
 
-Ini yang bikin engine “terasa modern”.
+Skia kuat di sini. Kamu harus lebih kejam.
 
-## 5.1 Blend pipeline
+## Approach:
 
-Support:
+### Level 1:
 
-* Porter-Duff blending
-* premultiplied alpha
-* HDR blending optional
+* FreeType rasterization
 
-Formula inti:
+### Level 2:
 
-```
-out = src * α + dst * (1 - α)
-```
+* SDF (Signed Distance Field)
 
-Tapi jangan naive.
+Distance function:
+
+d(x,y) = \min_{p \in glyph} | (x,y) - p |
+
+### Level 3:
+
+* MSDF (multi-channel signed distance field)
+* GPU shader based
+
+---
+
+# 7. COMPOSITING ENGINE
 
 Gunakan:
 
-* SIMD blend lanes
-* tile-local framebuffer
+* Porter-Duff compositing model
+
+Formula:
+
+C_{out} = C_a \cdot \alpha_a + C_b \cdot (1 - \alpha_a)
+
+Optimasi:
+
+* batch compositing
+* GPU blending mode direct mapping
 
 ---
 
-## 5.2 Effects Graph
+# 8. MEMORY MODEL (Rust advantage zone)
 
-Node-based:
+Kalau kamu salah desain di sini, engine kamu jadi “lag simulator”.
 
-* blur
-* drop shadow
-* color matrix
-* displacement map
+## Strategi:
 
-Compile jadi:
+* Arena allocator per frame
+* slab allocator untuk glyph/image
+* zero-copy command buffer
 
-> GPU fragment pipeline graph
+Struct:
+
+* Arc only for shared immutable assets
+* no per-pixel heap allocation
 
 ---
 
-# 6. GPU Backend (ini yang bikin kamu bisa lawan Skia beneran)
+# 9. RENDER GRAPH (ini yang bikin scalable)
 
-Jangan cuma OpenGL. Itu museum.
+Jangan langsung render scene.
 
-Wajib:
+Gunakan DAG render graph:
 
-* Vulkan (primary)
-* Metal (Apple)
-* WebGPU (future-proof)
+Nodes:
 
-Abstraction layer:
+* Clear pass
+* Path pass
+* Image pass
+* Text pass
+* Composite pass
 
-```rust
-trait GPUBackend {
-    fn create_buffer();
-    fn dispatch_compute();
-    fn draw_indexed();
-}
+Dependency resolution:
+
+* topological sort
+* parallel execution (rayon / job system)
+
+---
+
+# 10. PARALLELISM MODEL
+
+Skia kuat karena multi-threaded batching.
+
+Kamu harus:
+
+* job system (work stealing queue)
+* tile-based parallel rasterization
+* per-core command buffer
+
+Rust tools:
+
+* crossbeam deque
+* rayon (awal)
+* custom scheduler (akhirnya wajib)
+
+---
+
+# 11. “DISRUPTIVE EDGE” (biar gak cuma clone Skia)
+
+Kalau cuma implement Skia versi Rust, kamu kalah sebelum compile selesai.
+
+Harus ada 3 inovasi:
+
+## 11.1 Fully incremental rendering graph
+
+* hanya render pixel yang berubah
+* fine-grained invalidation
+
+## 11.2 GPU-first vector pipeline
+
+* vector langsung jadi GPU primitive (bukan raster CPU dulu)
+
+## 11.3 Deterministic cache system
+
+* hash-based scene cache
+* render result reuse antar frame
+
+---
+
+# 12. STRUKTUR RUST CRATE
+
+```
+engine/
+  core/
+  math/
+  scene/
+  layout/
+  raster/
+  gpu/
+  text/
+  compositing/
+  render_graph/
+  platform/
 ```
 
 ---
 
-# 7. Path Accelerator (bagian “senjata rahasia”)
+# REALITY CHECK (yang kamu gak minta tapi tetap perlu)
 
-Ini yang jarang engine kecil punya.
+Skia bukan menang karena “algoritma rahasia super ajaib”.
 
-## 7.1 Path caching
+Mereka menang karena:
 
-Cache:
+* 15+ tahun optimasi
+* GPU backend matang
+* caching ekstrem
+* edge-case handling gila
 
-* flattened path
-* tessellation result
-* SDF texture atlas
+Kalau kamu mau “bersaing”, fokusnya bukan ngalahin semua sekaligus.
 
-Key:
+Fokusnya:
 
-```
-hash(path geometry + transform + stroke style)
-```
-
----
-
-## 7.2 GPU path atlas
-
-* store SDF in texture atlas
-* reuse across frames
-
-Ini mengurangi CPU bottleneck drastis.
+> satu pipeline lebih bersih, lebih modular, lebih mudah dioptimasi daripada Skia.
 
 ---
 
-# 8. Memory Architecture (Rust advantage)
+Kalau kamu mau, tahap berikutnya bukan teori lagi—tapi kita bisa turun ke:
 
-Gunakan:
+* desain API Rust-nya
+* atau implementasi rasterizer SIMD pertama
+* atau bikin prototype GPU path renderer Vulkan
 
-* arena allocator (bumpalo / custom)
-* slab for nodes
-* zero-copy command buffers
-
-Avoid:
-
-* per-frame malloc
-* Rc/Arc di hot path
-
----
-
-# 9. Scheduling Engine (biar scalable)
-
-Work stealing thread pool:
-
-* rayon-style
-* tile-based jobs
-
-Priority:
-
-1. visible tiles
-2. UI foreground
-3. background raster
-
----
-
-# 10. Algoritma penting (ringkas tapi inti)
-
-### 10.1 Line rasterization
-
-* Bresenham (CPU fallback)
-* Xiaolin Wu (AA)
-
-### 10.2 Curve flattening
-
-* adaptive subdivision (de Casteljau)
-
-### 10.3 Polygon fill
-
-* winding rule / even-odd
-
-### 10.4 Tessellation
-
-* monotone polygon partition
-* ear clipping fallback
-
-### 10.5 Distance field
-
-* Euclidean distance transform (EDT)
-
----
-
-# 11. “Frontier Features” (ini yang bikin bukan sekadar clone Skia)
-
-Kalau kamu mau benar-benar naik kelas:
-
-## A. Predictive rendering
-
-* precompute next frame tiles
-* UI animation speculation
-
-## B. GPU-first vector pipeline
-
-* path langsung ke compute shader
-* CPU cuma orchestration
-
-## C. Hybrid raster model
-
-* small shapes → SDF
-* large fills → raster
-* text → glyph atlas SDF
-
-## D. Deterministic rendering mode
-
-* bitwise reproducible output (penting untuk UI diffing)
-
----
-
-# 12. Struktur crate Rust (real implementable)
-
-```
-/engine
-  /core
-    math.rs
-    color.rs
-    transform.rs
-
-  /scene
-    graph.rs
-    display_list.rs
-
-  /path
-    bezier.rs
-    flatten.rs
-    sdf.rs
-
-  /raster
-    tile.rs
-    scanline.rs
-    simd.rs
-
-  /gpu
-    backend_vulkan.rs
-    backend_metal.rs
-
-  /compositor
-    blend.rs
-    effects.rs
-
-  /scheduler
-    worker.rs
-    tiling.rs
-```
-
----
-
-# 13. Real talk (yang biasanya orang skip lalu gagal diam-diam)
-
-Kalau kamu:
-
-* tidak bikin tile system dari awal → kalah performa
-* tidak punya caching → mati di UI kompleks
-* tidak GPU compute path → tidak scalable
-* tidak SIMD → kalah sama engine modern
-
----
-
-# Penutup (yang tidak manis-manis amat)
-
-Membangun 2D engine yang bisa menyaingi Skia itu bukan “coding project”.
-
-Itu:
-
-* perang arsitektur data
-* perang pipeline GPU
-* perang cache behavior
-* perang determinisme rendering
-
-Kalau kamu serius, ini bukan soal “bisa atau tidak”.
-
-Ini soal:
-
-> seberapa banyak kompleksitas yang kamu berani jinakkan tanpa bikin sistemnya jadi monster yang makan pembuatnya sendiri.
-
-Dan ya, ini salah satu dari sedikit proyek yang kalau berhasil… orang lain akan bilang “ini tidak mungkin dibuat dari nol”.
-
-Padahal cuma kamu yang cukup keras kepala buat tidak percaya itu.
+Tinggal pilih, bukan minta motivasi.

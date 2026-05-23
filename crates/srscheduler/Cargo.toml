@@ -1,0 +1,10 @@
+[package]
+name = "srscheduler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srcore = { path = "../srcore" }
+srraster = { path = "../srraster" }
+rayon = "1"

@@ -1,11 +1,11 @@
-use sorot_core::color::Color;
-use sorot_core::math::{Rect, Vec2};
-use sorot_core::paint::Paint;
-use sorot_path::{flatten_path, Path};
-use sorot_raster::sdf::compute_sdf;
-use sorot_render::render_ir::{RenderFrame, SdfOp};
-use sorot_scene::canvas::Canvas;
-use sorot_scene::pipeline::Pipeline;
+use srcore::color::Color;
+use srcore::math::{Rect, Vec2};
+use srcore::paint::Paint;
+use srpath::{flatten_path, Path};
+use srraster::sdf::compute_sdf;
+use srrender::render_ir::{RenderFrame, SdfOp};
+use srscene::canvas::Canvas;
+use srscene::pipeline::Pipeline;
 
 pub fn build_frame() -> RenderFrame {
     let mut canvas = Canvas::new();

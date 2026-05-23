@@ -1,0 +1,17 @@
+[package]
+name = "srgpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srcore = { path = "../srcore" }
+srpath = { path = "../srpath" }
+srraster = { path = "../srraster" }
+srrender = { path = "../srrender" }
+wgpu = "24"
+winit = "0.30"
+env_logger = "0.11"
+log = "0.4"
+pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }
