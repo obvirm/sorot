@@ -154,6 +154,10 @@ pub struct WgpuBackend {
     texture_pool: TexturePool,
     composite_vb: wgpu::Buffer,
     fullscreen_ib: wgpu::Buffer,
+    shape_vb: wgpu::Buffer,
+    shape_ib: wgpu::Buffer,
+    shape_vb_cap: u64,
+    shape_ib_cap: u64,
 
     // dynamic state per frame
     frame: Option<RenderFrame>,
@@ -337,12 +341,28 @@ impl WgpuBackend {
             usage: wgpu::BufferUsages::INDEX,
         });
 
+        let shape_vb = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("shape_vb"),
+            size: 65536,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let shape_ib = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("shape_ib"),
+            size: 16384,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
         Self {
             window, surface, device, queue, config, surface_format: format,
             color_pipeline, sdf_pipeline, composite_pipeline,
             sdf_tex_layout, sdf_uni_layout, composite_layout,
             texture_pool,
             composite_vb, fullscreen_ib,
+            shape_vb, shape_ib,
+            shape_vb_cap: 65536,
+            shape_ib_cap: 16384,
             frame: None,
         }
     }
@@ -372,6 +392,54 @@ impl WgpuBackend {
             match &pass_def.kind {
                 PassKind::Shape { packet_ids, target_id } => {
                     let rt = self.texture_pool.get(*target_id);
+                    let mut all_verts: Vec<RawVertex> = Vec::new();
+                    let mut all_idx: Vec<u32> = Vec::new();
+                    let mut first_idx_offsets: Vec<(usize, u32)> = Vec::new();
+                    let mut base_v: u32 = 0;
+
+                    for &id in packet_ids {
+                        let pkt = frame.get_packet(id);
+                        if pkt.indices.is_empty() { continue; }
+                        let start_idx = all_idx.len();
+                        let count = pkt.indices.len() as u32;
+                        all_verts.extend(pkt.vertices.iter().map(|v| RawVertex {
+                            position: [v.clip_x, v.clip_y],
+                            color: [v.r, v.g, v.b, v.a],
+                        }));
+                        all_idx.extend(pkt.indices.iter().map(|i| base_v + i));
+                        first_idx_offsets.push((start_idx, count));
+                        base_v += pkt.vertices.len() as u32;
+                    }
+
+                    if all_verts.is_empty() || all_idx.is_empty() {
+                        continue;
+                    }
+
+                    let vbytes = bytemuck::cast_slice(&all_verts);
+                    let ibytes = bytemuck::cast_slice(&all_idx);
+
+                    if vbytes.len() as u64 > self.shape_vb_cap {
+                        self.shape_vb_cap = (vbytes.len() as u64).max(self.shape_vb_cap * 2);
+                        self.shape_vb = self.device.create_buffer(&wgpu::BufferDescriptor {
+                            label: Some("shape_vb"),
+                            size: self.shape_vb_cap,
+                            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                            mapped_at_creation: false,
+                        });
+                    }
+                    if ibytes.len() as u64 > self.shape_ib_cap {
+                        self.shape_ib_cap = (ibytes.len() as u64).max(self.shape_ib_cap * 2);
+                        self.shape_ib = self.device.create_buffer(&wgpu::BufferDescriptor {
+                            label: Some("shape_ib"),
+                            size: self.shape_ib_cap,
+                            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+                            mapped_at_creation: false,
+                        });
+                    }
+
+                    self.queue.write_buffer(&self.shape_vb, 0, vbytes);
+                    self.queue.write_buffer(&self.shape_ib, 0, ibytes);
+
                     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: Some("shape_pass"),
                         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -387,24 +455,10 @@ impl WgpuBackend {
                         occlusion_query_set: None,
                     });
                     pass.set_pipeline(&self.color_pipeline);
-                    for &id in packet_ids {
-                        let pkt = frame.get_packet(id);
-                        if pkt.indices.is_empty() { continue; }
-                        let verts: Vec<RawVertex> = pkt.vertices.iter().map(|v| RawVertex {
-                            position: [v.clip_x, v.clip_y],
-                            color: [v.r, v.g, v.b, v.a],
-                        }).collect();
-                        let vb = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                            label: Some("tmp_vb"), contents: bytemuck::cast_slice(&verts),
-                            usage: wgpu::BufferUsages::VERTEX,
-                        });
-                        let ib = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                            label: Some("tmp_ib"), contents: bytemuck::cast_slice(&pkt.indices),
-                            usage: wgpu::BufferUsages::INDEX,
-                        });
-                        pass.set_vertex_buffer(0, vb.slice(..));
-                        pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
-                        pass.draw_indexed(0..pkt.indices.len() as u32, 0, 0..1);
+                    pass.set_vertex_buffer(0, self.shape_vb.slice(..));
+                    pass.set_index_buffer(self.shape_ib.slice(..), wgpu::IndexFormat::Uint32);
+                    for (start_idx, count) in &first_idx_offsets {
+                        pass.draw_indexed(*start_idx as u32..*start_idx as u32 + count, 0, 0..1);
                     }
                 }
 
