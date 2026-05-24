@@ -1,0 +1,9 @@
+[package]
+name = "distancefield"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+flatten = { path = "../flatten" }
+vector = { path = "../vector" }

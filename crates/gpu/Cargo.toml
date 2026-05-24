@@ -1,0 +1,23 @@
+[package]
+name = "gpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }
+matrix = { path = "../matrix" }
+color = { path = "../color" }
+pathbuilder = { path = "../pathbuilder" }
+bezier = { path = "../bezier" }
+flatten = { path = "../flatten" }
+raster = { path = "../raster" }
+renderir = { path = "../renderir" }
+passgraph = { path = "../passgraph" }
+wgpu = "24"
+winit = "0.30"
+env_logger = "0.11"
+log = "0.4"
+pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }

@@ -1,0 +1,19 @@
+[package]
+name = "pipeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }
+matrix = { path = "../matrix" }
+color = { path = "../color" }
+paint = { path = "../paint" }
+pathbuilder = { path = "../pathbuilder" }
+flatten = { path = "../flatten" }
+triangulate = { path = "../triangulate" }
+renderir = { path = "../renderir" }
+displaylist = { path = "../displaylist" }
+geometrycache = { path = "../geometrycache" }
+scenegraph = { path = "../scenegraph" }

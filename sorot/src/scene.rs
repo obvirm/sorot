@@ -1,13 +1,13 @@
-use srvec2::Vec2;
-use srrect::Rect;
-use srcolor::Color;
-use srpaint::Paint;
-use srpath::Path;
-use srflatten::flatten_path;
-use srraster::sdf::compute_sdf;
-use srrender::render_ir::{RenderFrame, SdfOp};
-use srcanvas::Canvas;
-use srscene::pipeline::Pipeline;
+use vector::Vec2;
+use rect::Rect;
+use color::Color;
+use paint::Paint;
+use pathbuilder::Path;
+use flatten::flatten_path;
+use raster::sdf::compute_sdf;
+use renderir::render_ir::{RenderFrame, SdfOp};
+use canvas::Canvas;
+use pipeline::Pipeline;
 
 pub fn build_frame() -> RenderFrame {
     let mut canvas = Canvas::new();

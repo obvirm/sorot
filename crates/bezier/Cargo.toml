@@ -1,0 +1,9 @@
+[package]
+name = "bezier"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }

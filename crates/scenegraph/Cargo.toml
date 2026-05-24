@@ -1,0 +1,16 @@
+[package]
+name = "scenegraph"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }
+matrix = { path = "../matrix" }
+color = { path = "../color" }
+paint = { path = "../paint" }
+pathbuilder = { path = "../pathbuilder" }
+bezier = { path = "../bezier" }
+flatten = { path = "../flatten" }
+triangulate = { path = "../triangulate" }

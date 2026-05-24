@@ -11,12 +11,12 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 arbitrary = { version = "1", features = ["derive"] }
 
-srvec2 = { path = "../crates/srvec2" }
-srmatrix = { path = "../crates/srmatrix" }
-srcolor = { path = "../crates/srcolor" }
-srpath = { path = "../crates/srpath" }
-srflatten = { path = "../crates/srflatten" }
-srblend = { path = "../crates/srblend" }
+vector = { path = "../crates/vector" }
+matrix = { path = "../crates/matrix" }
+color = { path = "../crates/color" }
+pathbuilder = { path = "../crates/pathbuilder" }
+flatten = { path = "../crates/flatten" }
+blend = { path = "../crates/blend" }
 
 [[bin]]
 name = "fuzzmatrix"

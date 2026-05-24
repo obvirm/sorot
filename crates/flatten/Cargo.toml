@@ -1,0 +1,10 @@
+[package]
+name = "flatten"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+bezier = { path = "../bezier" }
+pathbuilder = { path = "../pathbuilder" }
+vector = { path = "../vector" }

@@ -1,0 +1,8 @@
+[package]
+name = "passgraph"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+renderir = { path = "../renderir" }

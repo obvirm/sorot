@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use srvec2::{Matrix, Vec2};
+use vector::{Matrix, Vec2};
 
 fuzz_target!(|data: ([f32; 6], [f32; 2])| {
     let ([a, c, e, b, d, f], [x, y]) = data;
@@ -14,7 +14,7 @@ fuzz_target!(|data: ([f32; 6], [f32; 2])| {
         p0: 0.0, p1: 0.0, p2: 1.0,
         mask: Default::default(),
     };
-    let m = Matrix { mask: srmatrix::Matrix::TypeMask::compute(a, c, e, b, d, f, 0.0, 0.0, 1.0), ..m };
+    let m = Matrix { mask: matrix::Matrix::TypeMask::compute(a, c, e, b, d, f, 0.0, 0.0, 1.0), ..m };
     let p = Vec2::new(x, y);
 
     let r1 = m.map_point(p);

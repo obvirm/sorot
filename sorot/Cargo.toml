@@ -5,18 +5,19 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srvec2 = { path = "../crates/srvec2" }
-srrect = { path = "../crates/srrect" }
-srmatrix = { path = "../crates/srmatrix" }
-srcolor = { path = "../crates/srcolor" }
-srpaint = { path = "../crates/srpaint" }
-srpath = { path = "../crates/srpath" }
-srflatten = { path = "../crates/srflatten" }
-srraster = { path = "../crates/srraster" }
-srgpu = { path = "../crates/srgpu" }
-srscene = { path = "../crates/srscene" }
-srrender = { path = "../crates/srrender" }
-srcanvas = { path = "../crates/srcanvas" }
-srgraph = { path = "../crates/srgraph" }
+vector = { path = "../crates/vector" }
+rect = { path = "../crates/rect" }
+matrix = { path = "../crates/matrix" }
+color = { path = "../crates/color" }
+paint = { path = "../crates/paint" }
+pathbuilder = { path = "../crates/pathbuilder" }
+flatten = { path = "../crates/flatten" }
+raster = { path = "../crates/raster" }
+gpu = { path = "../crates/gpu" }
+scene = { path = "../crates/scene" }
+renderir = { path = "../crates/renderir" }
+canvas = { path = "../crates/canvas" }
+scenegraph = { path = "../crates/scenegraph" }
+pipeline = { path = "../crates/pipeline" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 pollster = "0.4"

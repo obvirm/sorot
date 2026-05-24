@@ -81,12 +81,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anes"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
-
-[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -134,6 +128,14 @@ dependencies = [
  "anstyle",
  "once_cell_polyfill",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "antialias"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "vector",
 ]
 
 [[package]]
@@ -185,6 +187,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "bezier"
+version = "0.1.0"
+dependencies = [
+ "rect",
+ "vector",
+]
+
+[[package]]
 name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -212,6 +222,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
 dependencies = [
  "serde_core",
+]
+
+[[package]]
+name = "blend"
+version = "0.1.0"
+dependencies = [
+ "color",
 ]
 
 [[package]]
@@ -294,10 +311,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "cast"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
+name = "canvas"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "displaylist",
+ "matrix",
+ "paint",
+ "pathbuilder",
+ "rect",
+ "scenegraph",
+ "vector",
+]
 
 [[package]]
 name = "cc"
@@ -324,58 +349,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
-name = "ciborium"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42e69ffd6f0917f5c029256a24d0161db17cea3997d185db0d35926308770f0e"
-dependencies = [
- "ciborium-io",
- "ciborium-ll",
- "serde",
-]
-
-[[package]]
-name = "ciborium-io"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05afea1e0a06c9be33d539b876f1ce3692f4afea2cb41f740e7743225ed1c757"
-
-[[package]]
-name = "ciborium-ll"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
-dependencies = [
- "ciborium-io",
- "half",
-]
-
-[[package]]
-name = "clap"
-version = "4.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ddb117e43bbf7dacf0a4190fef4d345b9bad68dfc649cb349e7d17d28428e51"
-dependencies = [
- "clap_builder",
-]
-
-[[package]]
-name = "clap_builder"
-version = "4.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "714a53001bf66416adb0e2ef5ac857140e7dc3a0c48fb28b2f10762fc4b5069f"
-dependencies = [
- "anstyle",
- "clap_lex",
-]
-
-[[package]]
-name = "clap_lex"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
-
-[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -383,6 +356,13 @@ checksum = "3538270d33cc669650c4b093848450d380def10c331d38c768e34cac80576e6e"
 dependencies = [
  "termcolor",
  "unicode-width",
+]
+
+[[package]]
+name = "color"
+version = "0.1.0"
+dependencies = [
+ "vector",
 ]
 
 [[package]]
@@ -400,6 +380,10 @@ dependencies = [
  "bytes",
  "memchr",
 ]
+
+[[package]]
+name = "compositor"
+version = "0.1.0"
 
 [[package]]
 name = "concurrent-queue"
@@ -460,42 +444,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "criterion"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
-dependencies = [
- "anes",
- "cast",
- "ciborium",
- "clap",
- "criterion-plot",
- "is-terminal",
- "itertools",
- "num-traits",
- "once_cell",
- "oorandom",
- "plotters",
- "rayon",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "tinytemplate",
- "walkdir",
-]
-
-[[package]]
-name = "criterion-plot"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
-dependencies = [
- "cast",
- "itertools",
-]
-
-[[package]]
 name = "crossbeam-deque"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -521,12 +469,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
-name = "crunchy"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
-
-[[package]]
 name = "cursor-icon"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -548,6 +490,27 @@ name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b"
+
+[[package]]
+name = "displaylist"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "matrix",
+ "paint",
+ "pathbuilder",
+ "rect",
+ "scenegraph",
+ "vector",
+]
+
+[[package]]
+name = "distancefield"
+version = "0.1.0"
+dependencies = [
+ "flatten",
+ "vector",
+]
 
 [[package]]
 name = "dlib"
@@ -578,6 +541,15 @@ name = "dpi"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
+
+[[package]]
+name = "effect"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "surface",
+ "vector",
+]
 
 [[package]]
 name = "either"
@@ -640,6 +612,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
+name = "fixed"
+version = "0.1.0"
+dependencies = [
+ "matrix",
+]
+
+[[package]]
 name = "flate2"
 version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -647,6 +626,15 @@ checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "flatten"
+version = "0.1.0"
+dependencies = [
+ "bezier",
+ "pathbuilder",
+ "vector",
 ]
 
 [[package]]
@@ -707,6 +695,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "geometrycache"
+version = "0.1.0"
+dependencies = [
+ "flatten",
+ "pathbuilder",
+ "triangulate",
+]
+
+[[package]]
 name = "gethostname"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -761,6 +758,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "gpu"
+version = "0.1.0"
+dependencies = [
+ "bezier",
+ "bytemuck",
+ "color",
+ "env_logger",
+ "flatten",
+ "log",
+ "matrix",
+ "passgraph",
+ "pathbuilder",
+ "pollster",
+ "raster",
+ "rect",
+ "renderir",
+ "vector",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
 name = "gpu-alloc"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -809,17 +828,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdf242682df893b86f33a73828fb09ca4b2d3bb6cc95249707fc684d27484b91"
 dependencies = [
  "bitflags 2.11.1",
-]
-
-[[package]]
-name = "half"
-version = "2.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ea2d84b969582b4b1864a92dc5d27cd2b77b622a8d79306834f1be5ba20d84b"
-dependencies = [
- "cfg-if",
- "crunchy",
- "zerocopy",
 ]
 
 [[package]]
@@ -879,36 +887,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "is-terminal"
-version = "0.4.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
-dependencies = [
- "hermit-abi",
- "libc",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
-
-[[package]]
-name = "itertools"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itoa"
-version = "1.0.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "jiff"
@@ -1109,6 +1091,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "matrix"
+version = "0.1.0"
+dependencies = [
+ "rect",
+ "vector",
 ]
 
 [[package]]
@@ -1478,12 +1468,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
-name = "oorandom"
-version = "11.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
-
-[[package]]
 name = "orbclient"
 version = "0.3.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1512,6 +1496,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "paint"
+version = "0.1.0"
+dependencies = [
+ "color",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1535,10 +1526,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "passgraph"
+version = "0.1.0"
+dependencies = [
+ "renderir",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "pathbuilder"
+version = "0.1.0"
+dependencies = [
+ "vector",
+]
+
+[[package]]
+name = "pathcache"
+version = "0.1.0"
+dependencies = [
+ "flatten",
+ "pathbuilder",
+ "vector",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -1573,6 +1587,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
+name = "pipeline"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "displaylist",
+ "flatten",
+ "geometrycache",
+ "matrix",
+ "paint",
+ "pathbuilder",
+ "rect",
+ "renderir",
+ "scenegraph",
+ "triangulate",
+ "vector",
+]
+
+[[package]]
 name = "pkg-config"
 version = "0.3.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1583,34 +1615,6 @@ name = "plain"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
-
-[[package]]
-name = "plotters"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aeb6f403d7a4911efb1e33402027fc44f29b5bf6def3effcc22d7bb75f2b747"
-dependencies = [
- "num-traits",
- "plotters-backend",
- "plotters-svg",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "plotters-backend"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df42e13c12958a16b3f7f4386b9ab1f3e7933914ecea48da7139435263a4172a"
-
-[[package]]
-name = "plotters-svg"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51bae2ac328883f7acdfea3d66a7c35751187f870bc81f94563733a154d7a670"
-dependencies = [
- "plotters-backend",
-]
 
 [[package]]
 name = "png"
@@ -1727,6 +1731,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 
 [[package]]
+name = "raster"
+version = "0.1.0"
+dependencies = [
+ "bezier",
+ "color",
+ "distancefield",
+ "fixed",
+ "flatten",
+ "matrix",
+ "pathbuilder",
+ "rect",
+ "vector",
+]
+
+[[package]]
 name = "raw-window-handle"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1750,6 +1769,13 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "rect"
+version = "0.1.0"
+dependencies = [
+ "vector",
 ]
 
 [[package]]
@@ -1815,6 +1841,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
+name = "renderir"
+version = "0.1.0"
+dependencies = [
+ "blend",
+ "color",
+ "matrix",
+ "paint",
+ "rect",
+ "vector",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1871,6 +1909,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "scanline"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "flatten",
+ "pathbuilder",
+ "tile",
+ "vector",
+]
+
+[[package]]
+name = "scene"
+version = "0.1.0"
+
+[[package]]
+name = "scenegraph"
+version = "0.1.0"
+dependencies = [
+ "bezier",
+ "color",
+ "flatten",
+ "matrix",
+ "paint",
+ "pathbuilder",
+ "rect",
+ "triangulate",
+ "vector",
+]
+
+[[package]]
+name = "scheduler"
+version = "0.1.0"
+
+[[package]]
 name = "scoped-tls"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1908,7 +1980,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
- "serde_derive",
 ]
 
 [[package]]
@@ -1932,23 +2003,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_json"
-version = "1.0.150"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
-dependencies = [
- "itoa",
- "memchr",
- "serde",
- "serde_core",
- "zmij",
-]
-
-[[package]]
 name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
+name = "simd"
+version = "0.1.0"
+dependencies = [
+ "color",
+]
 
 [[package]]
 name = "simd-adler32"
@@ -2031,21 +2096,22 @@ dependencies = [
 name = "sorot"
 version = "0.1.0"
 dependencies = [
+ "canvas",
+ "color",
+ "flatten",
+ "gpu",
  "image",
+ "matrix",
+ "paint",
+ "pathbuilder",
+ "pipeline",
  "pollster",
- "srcanvas",
- "srcolor",
- "srflatten",
- "srgpu",
- "srgraph",
- "srmatrix",
- "srpaint",
- "srpath",
- "srraster",
- "srrect",
- "srrender",
- "srscene",
- "srvec2",
+ "raster",
+ "rect",
+ "renderir",
+ "scene",
+ "scenegraph",
+ "vector",
 ]
 
 [[package]]
@@ -2053,13 +2119,13 @@ name = "sorotfuzz"
 version = "0.1.0"
 dependencies = [
  "arbitrary",
+ "blend",
+ "color",
+ "flatten",
  "libfuzzer-sys",
- "srblend",
- "srcolor",
- "srflatten",
- "srmatrix",
- "srpath",
- "srvec2",
+ "matrix",
+ "pathbuilder",
+ "vector",
 ]
 
 [[package]]
@@ -2070,292 +2136,6 @@ checksum = "eda41003dc44290527a59b13432d4a0379379fa074b70174882adfbdfd917844"
 dependencies = [
  "bitflags 2.11.1",
 ]
-
-[[package]]
-name = "srAAA"
-version = "0.1.0"
-dependencies = [
- "srcolor",
- "srvec2",
-]
-
-[[package]]
-name = "srbezier"
-version = "0.1.0"
-dependencies = [
- "srrect",
- "srvec2",
-]
-
-[[package]]
-name = "srblend"
-version = "0.1.0"
-dependencies = [
- "srcolor",
-]
-
-[[package]]
-name = "srcache"
-version = "0.1.0"
-dependencies = [
- "srflatten",
- "srpath",
-]
-
-[[package]]
-name = "srcanvas"
-version = "0.1.0"
-dependencies = [
- "srcolor",
- "srdisplaylist",
- "srgraph",
- "srmatrix",
- "srpaint",
- "srpath",
- "srrect",
- "srvec2",
-]
-
-[[package]]
-name = "srcolor"
-version = "0.1.0"
-dependencies = [
- "srvec2",
-]
-
-[[package]]
-name = "srcompositor"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "srcolor",
- "srsurface",
- "srvec2",
-]
-
-[[package]]
-name = "srdisplaylist"
-version = "0.1.0"
-dependencies = [
- "srcolor",
- "srgraph",
- "srmatrix",
- "srpaint",
- "srpath",
- "srrect",
- "srvec2",
-]
-
-[[package]]
-name = "sreffect"
-version = "0.1.0"
-dependencies = [
- "srcolor",
- "srsurface",
- "srvec2",
-]
-
-[[package]]
-name = "srfixed"
-version = "0.1.0"
-dependencies = [
- "srmatrix",
-]
-
-[[package]]
-name = "srflatten"
-version = "0.1.0"
-dependencies = [
- "srbezier",
- "srpath",
- "srvec2",
-]
-
-[[package]]
-name = "srgpu"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "env_logger",
- "log",
- "pollster",
- "srbezier",
- "srcolor",
- "srflatten",
- "srmatrix",
- "srpass",
- "srpath",
- "srraster",
- "srrect",
- "srrender",
- "srvec2",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "srgraph"
-version = "0.1.0"
-dependencies = [
- "srbezier",
- "srcolor",
- "srflatten",
- "srmatrix",
- "srpaint",
- "srpath",
- "srrect",
- "srtri",
- "srvec2",
-]
-
-[[package]]
-name = "srmatrix"
-version = "0.1.0"
-dependencies = [
- "srrect",
- "srvec2",
-]
-
-[[package]]
-name = "srpaint"
-version = "0.1.0"
-dependencies = [
- "srcolor",
-]
-
-[[package]]
-name = "srpass"
-version = "0.1.0"
-dependencies = [
- "srrender",
-]
-
-[[package]]
-name = "srpath"
-version = "0.1.0"
-dependencies = [
- "srvec2",
-]
-
-[[package]]
-name = "srraster"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "srbezier",
- "srcolor",
- "srfixed",
- "srflatten",
- "srmatrix",
- "srpath",
- "srrect",
- "srsdf",
- "srvec2",
-]
-
-[[package]]
-name = "srrect"
-version = "0.1.0"
-dependencies = [
- "srvec2",
-]
-
-[[package]]
-name = "srrender"
-version = "0.1.0"
-dependencies = [
- "srblend",
- "srcolor",
- "srmatrix",
- "srpaint",
- "srrect",
- "srvec2",
-]
-
-[[package]]
-name = "srscanline"
-version = "0.1.0"
-dependencies = [
- "srcolor",
- "srflatten",
- "srpath",
- "srtile",
- "srvec2",
-]
-
-[[package]]
-name = "srscene"
-version = "0.1.0"
-dependencies = [
- "srbezier",
- "srcache",
- "srcolor",
- "srcompositor",
- "srdisplaylist",
- "srflatten",
- "srgraph",
- "srmatrix",
- "srpaint",
- "srpath",
- "srraster",
- "srrect",
- "srrender",
- "srtri",
- "srvec2",
-]
-
-[[package]]
-name = "srscheduler"
-version = "0.1.0"
-dependencies = [
- "rayon",
- "srrect",
- "srtile",
- "srvec2",
-]
-
-[[package]]
-name = "srsdf"
-version = "0.1.0"
-dependencies = [
- "srflatten",
- "srvec2",
-]
-
-[[package]]
-name = "srsimd"
-version = "0.1.0"
-dependencies = [
- "srcolor",
-]
-
-[[package]]
-name = "srsurface"
-version = "0.1.0"
-dependencies = [
- "srblend",
- "srcolor",
-]
-
-[[package]]
-name = "srtile"
-version = "0.1.0"
-dependencies = [
- "srvec2",
-]
-
-[[package]]
-name = "srtri"
-version = "0.1.0"
-dependencies = [
- "srflatten",
- "srpath",
- "srvec2",
-]
-
-[[package]]
-name = "srvec2"
-version = "0.1.0"
 
 [[package]]
 name = "static_assertions"
@@ -2389,6 +2169,14 @@ dependencies = [
  "quote",
  "rustversion",
  "syn",
+]
+
+[[package]]
+name = "surface"
+version = "0.1.0"
+dependencies = [
+ "blend",
+ "color",
 ]
 
 [[package]]
@@ -2452,6 +2240,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tile"
+version = "0.1.0"
+dependencies = [
+ "vector",
+]
+
+[[package]]
+name = "tiling"
+version = "0.1.0"
+dependencies = [
+ "rect",
+ "tile",
+ "vector",
+ "worker",
+]
+
+[[package]]
 name = "tiny-skia"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2474,16 +2279,6 @@ dependencies = [
  "arrayref",
  "bytemuck",
  "strict-num",
-]
-
-[[package]]
-name = "tinytemplate"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
-dependencies = [
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -2533,6 +2328,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 
 [[package]]
+name = "triangulate"
+version = "0.1.0"
+dependencies = [
+ "flatten",
+ "pathbuilder",
+ "vector",
+]
+
+[[package]]
 name = "ttf-parser"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2567,6 +2371,10 @@ name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
+
+[[package]]
+name = "vector"
+version = "0.1.0"
 
 [[package]]
 name = "version_check"
@@ -3124,6 +2932,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
+name = "worker"
+version = "0.1.0"
+dependencies = [
+ "rayon",
+]
+
+[[package]]
 name = "x11-dl"
 version = "2.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3205,9 +3020,3 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "zmij"
-version = "1.0.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"

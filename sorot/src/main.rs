@@ -1,6 +1,6 @@
 mod scene;
 
-use srgpu::wgpu_backend::WgpuApp;
+use gpu::wgpu_backend::WgpuApp;
 
 fn main() {
     let frame = scene::build_frame();

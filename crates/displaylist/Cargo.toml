@@ -1,0 +1,14 @@
+[package]
+name = "displaylist"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }
+matrix = { path = "../matrix" }
+color = { path = "../color" }
+paint = { path = "../paint" }
+pathbuilder = { path = "../pathbuilder" }
+scenegraph = { path = "../scenegraph" }
