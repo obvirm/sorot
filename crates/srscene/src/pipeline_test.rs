@@ -1,6 +1,6 @@
 use super::*;
-    use crate::display_list::DrawRect;
-    use srcore::color::Color;
+    use srdisplaylist::DrawRect;
+    use srcolor::Color;
 
     #[test]
     fn test_build_frame() {

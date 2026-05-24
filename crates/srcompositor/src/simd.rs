@@ -1,4 +1,4 @@
-use srcore::color::Color;
+use srcolor::Color;
 
 /// Blend two slices of premultiplied RGBA pixels using src-over.
 ///

@@ -1,0 +1,10 @@
+[package]
+name = "srflatten"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srbezier = { path = "../srbezier" }
+srpath = { path = "../srpath" }
+srvec2 = { path = "../srvec2" }

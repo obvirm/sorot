@@ -1,0 +1,9 @@
+[package]
+name = "srmatrix"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }

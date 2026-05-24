@@ -9,7 +9,7 @@ use winit::window::{Window, WindowId};
 use srrender::render_ir::{RenderFrame, SdfOp};
 
 use crate::backend::GpuBackend;
-use crate::pass::{PassGraph, PassKind};
+use srpass::{PassGraph, PassKind};
 use crate::render_target::TexturePool;
 
 #[repr(C)]

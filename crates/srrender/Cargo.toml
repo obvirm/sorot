@@ -5,5 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srcore = { path = "../srcore" }
-srcompositor = { path = "../srcompositor" }
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }
+srmatrix = { path = "../srmatrix" }
+srcolor = { path = "../srcolor" }
+srpaint = { path = "../srpaint" }
+srblend = { path = "../srblend" }

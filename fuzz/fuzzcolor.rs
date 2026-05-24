@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use srcore::color::Color;
-use srcompositor::blend::BlendMode;
+use srcolor::Color;
+use srblend::BlendMode;
 
 fuzz_target!(|data: [u8; 16]| {
     let r1 = data[0] as f32 / 255.0;

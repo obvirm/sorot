@@ -1,6 +1,6 @@
-use srcore::math::Rect;
+use srrect::Rect;
 
-use srraster::tile::{Tile, TileGrid};
+use srtile::{Tile, TileGrid};
 
 use crate::worker::{TilePriority, WorkerPool};
 
@@ -98,8 +98,8 @@ fn tile_to_rect(tile: &Tile, tile_size: u32) -> Rect {
     let min_x = (tile.col * tile_size) as f32;
     let min_y = (tile.row * tile_size) as f32;
     Rect::new(
-        srcore::math::Vec2::new(min_x, min_y),
-        srcore::math::Vec2::new(min_x + tile_size as f32, min_y + tile_size as f32),
+        srvec2::Vec2::new(min_x, min_y),
+        srvec2::Vec2::new(min_x + tile_size as f32, min_y + tile_size as f32),
     )
 }
 

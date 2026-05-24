@@ -1,0 +1,14 @@
+[package]
+name = "srdisplaylist"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }
+srmatrix = { path = "../srmatrix" }
+srcolor = { path = "../srcolor" }
+srpaint = { path = "../srpaint" }
+srpath = { path = "../srpath" }
+srgraph = { path = "../srgraph" }

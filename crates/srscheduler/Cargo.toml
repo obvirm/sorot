@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srcore = { path = "../srcore" }
-srraster = { path = "../srraster" }
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }
+srtile = { path = "../srtile" }
 rayon = "1"

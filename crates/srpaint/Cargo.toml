@@ -1,0 +1,8 @@
+[package]
+name = "srpaint"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srcolor = { path = "../srcolor" }

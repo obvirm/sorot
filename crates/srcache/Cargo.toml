@@ -1,0 +1,9 @@
+[package]
+name = "srcache"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+srflatten = { path = "../srflatten" }
+srpath = { path = "../srpath" }

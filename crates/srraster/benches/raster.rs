@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use srcore::math::Vec2;
-use srcore::path::{flatten_path, FlattenVerb, FlattenedPath, Path};
+use srvec2::Vec2;
+use srpath::{flatten_path, FlattenVerb, FlattenedPath, Path};
 use srraster::{scanline, triangulate, TriMesh};
-use srcore::color::Color;
+use srcolor::Color;
 
 fn bench_flatten_circle(c: &mut Criterion) {
     let path = Path::circle(Vec2::new(200.0, 200.0), 150.0);

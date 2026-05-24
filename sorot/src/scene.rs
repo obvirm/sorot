@@ -1,10 +1,12 @@
-use srcore::color::Color;
-use srcore::math::{Rect, Vec2};
-use srcore::paint::Paint;
-use srcore::path::{flatten_path, Path};
+use srvec2::Vec2;
+use srrect::Rect;
+use srcolor::Color;
+use srpaint::Paint;
+use srpath::Path;
+use srflatten::flatten_path;
 use srraster::sdf::compute_sdf;
 use srrender::render_ir::{RenderFrame, SdfOp};
-use srscene::canvas::Canvas;
+use srcanvas::Canvas;
 use srscene::pipeline::Pipeline;
 
 pub fn build_frame() -> RenderFrame {

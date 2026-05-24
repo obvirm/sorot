@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-use srcore::path::{flatten_path, FlattenedPath, Path};
-use srraster::{triangulate, TriMesh};
+use srpath::Path;
+use srflatten::{flatten_path, FlattenedPath};
+use srtri::{triangulate, TriMesh};
 
 fn hash_path_and_tol(path: &Path, tolerance: f32) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();

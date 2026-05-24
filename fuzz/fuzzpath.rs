@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use srcore::math::Vec2;
-use srcore::path::{flatten_path, Path};
+use srvec2::Vec2;
+use srpath::{flatten_path, Path};
 
 fuzz_target!(|data: &[u8]| {
     if data.len() < 8 { return; }

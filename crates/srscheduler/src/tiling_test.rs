@@ -1,5 +1,5 @@
 use super::*;
-    use srcore::math::Vec2;
+    use srvec2::Vec2;
 
     #[test]
     fn test_classify_tiles() {

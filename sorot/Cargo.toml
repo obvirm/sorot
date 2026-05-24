@@ -5,10 +5,18 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srcore = { path = "../crates/srcore" }
+srvec2 = { path = "../crates/srvec2" }
+srrect = { path = "../crates/srrect" }
+srmatrix = { path = "../crates/srmatrix" }
+srcolor = { path = "../crates/srcolor" }
+srpaint = { path = "../crates/srpaint" }
+srpath = { path = "../crates/srpath" }
+srflatten = { path = "../crates/srflatten" }
 srraster = { path = "../crates/srraster" }
 srgpu = { path = "../crates/srgpu" }
 srscene = { path = "../crates/srscene" }
 srrender = { path = "../crates/srrender" }
+srcanvas = { path = "../crates/srcanvas" }
+srgraph = { path = "../crates/srgraph" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 pollster = "0.4"

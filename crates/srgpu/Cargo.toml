@@ -5,9 +5,16 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srcore = { path = "../srcore" }
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }
+srmatrix = { path = "../srmatrix" }
+srcolor = { path = "../srcolor" }
+srpath = { path = "../srpath" }
+srbezier = { path = "../srbezier" }
+srflatten = { path = "../srflatten" }
 srraster = { path = "../srraster" }
 srrender = { path = "../srrender" }
+srpass = { path = "../srpass" }
 wgpu = "24"
 winit = "0.30"
 env_logger = "0.11"

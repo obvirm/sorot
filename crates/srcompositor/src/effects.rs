@@ -1,6 +1,6 @@
-use srcore::color::Color;
+use srcolor::Color;
 
-use crate::surface::Surface;
+use srsurface::Surface;
 
 pub fn box_blur(src: &Surface, radius: u32) -> Surface {
     let mut tmp = Surface::new(src.width, src.height);

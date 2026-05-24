@@ -1,6 +1,8 @@
-use srcompositor::blend::BlendMode;
-use srcore::math::{Matrix, Rect, Vec2};
-use srcore::paint::Paint;
+use srblend::BlendMode;
+use srvec2::Vec2;
+use srrect::Rect;
+use srmatrix::Matrix;
+use srpaint::Paint;
 
 /// Vertex with premultiplied color for GPU upload.
 #[derive(Debug, Clone, Copy)]

@@ -1,11 +1,15 @@
-use srcore::math::{Matrix, Rect, Vec2};
-use srcore::paint::Paint;
-use srcore::path::Path;
+use srvec2::Vec2;
+use srrect::Rect;
+use srmatrix::Matrix;
+use srpaint::Paint;
+use srpath::Path;
+use srflatten::flatten_path;
+use srtri::{triangulate, TriMesh};
 use srrender::render_ir::{GpuVertex, RenderFrame, RenderPacket};
 
-use crate::display_list::{DisplayList, DrawCommand};
+use srdisplaylist::{DisplayList, DrawCommand};
 use crate::geometry_cache::GeometryCache;
-use crate::graph::SceneGraph;
+use srgraph::SceneGraph;
 
 pub struct Pipeline {
     pub geom_cache: GeometryCache,
@@ -54,7 +58,7 @@ impl Pipeline {
     }
 
     fn mesh_to_packet(
-        mesh: &srraster::TriMesh,
+        mesh: &srtri::TriMesh,
         paint: &Paint,
         transform: Matrix,
         screen_w: u32,

@@ -5,7 +5,15 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-srcore = { path = "../srcore" }
+srvec2 = { path = "../srvec2" }
+srrect = { path = "../srrect" }
+srmatrix = { path = "../srmatrix" }
+srfixed = { path = "../srfixed" }
+srcolor = { path = "../srcolor" }
+srpath = { path = "../srpath" }
+srbezier = { path = "../srbezier" }
+srflatten = { path = "../srflatten" }
+srsdf = { path = "../srsdf" }
 
 [dev-dependencies]
 criterion.workspace = true

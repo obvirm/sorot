@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use srcompositor::blend::BlendMode;
-use srcompositor::simd;
-use srcore::color::Color;
+use srblend::BlendMode;
+use srsimd;
+use srcolor::Color;
 
 fn bench_blend_src_over(c: &mut Criterion) {
     let color = Color::from_rgba(1.0, 0.0, 0.0, 0.5);

@@ -1,5 +1,6 @@
-use srcore::math::{Rect, Vec2};
-use srcore::path::FlattenedPath;
+use srvec2::Vec2;
+use srrect::Rect;
+use srflatten::FlattenedPath;
 
 pub fn compute_sdf(
     path: &FlattenedPath,
@@ -34,8 +35,8 @@ pub fn compute_sdf(
             let px = padded.min.x + (col as f32 + 0.5) * inv_scale_x;
             let py = padded.min.y + (row as f32 + 0.5) * inv_scale_y;
             let p = Vec2::new(px, py);
-            let dist = srcore::path::sdf::distance_to_polyline(p, &path.points, true);
-            let wn = srcore::path::sdf::winding_number(p, &path.points);
+            let dist = srsdf::distance_to_polyline(p, &path.points, true);
+            let wn = srsdf::winding_number(p, &path.points);
             let signed = if wn != 0 { -dist } else { dist };
             let max_dist = padded.width().max(padded.height()) * padding_ratio;
             let value = ((signed / max_dist) * 0.5 + 0.5).clamp(0.0, 1.0);

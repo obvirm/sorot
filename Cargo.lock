@@ -2033,11 +2033,19 @@ version = "0.1.0"
 dependencies = [
  "image",
  "pollster",
- "srcore",
+ "srcanvas",
+ "srcolor",
+ "srflatten",
  "srgpu",
+ "srgraph",
+ "srmatrix",
+ "srpaint",
+ "srpath",
  "srraster",
+ "srrect",
  "srrender",
  "srscene",
+ "srvec2",
 ]
 
 [[package]]
@@ -2046,9 +2054,12 @@ version = "0.1.0"
 dependencies = [
  "arbitrary",
  "libfuzzer-sys",
- "srcompositor",
- "srcore",
- "srraster",
+ "srblend",
+ "srcolor",
+ "srflatten",
+ "srmatrix",
+ "srpath",
+ "srvec2",
 ]
 
 [[package]]
@@ -2061,16 +2072,95 @@ dependencies = [
 ]
 
 [[package]]
+name = "srAAA"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+ "srvec2",
+]
+
+[[package]]
+name = "srbezier"
+version = "0.1.0"
+dependencies = [
+ "srrect",
+ "srvec2",
+]
+
+[[package]]
+name = "srblend"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+]
+
+[[package]]
+name = "srcache"
+version = "0.1.0"
+dependencies = [
+ "srflatten",
+ "srpath",
+]
+
+[[package]]
+name = "srcanvas"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+ "srdisplaylist",
+ "srgraph",
+ "srmatrix",
+ "srpaint",
+ "srpath",
+ "srrect",
+ "srvec2",
+]
+
+[[package]]
+name = "srcolor"
+version = "0.1.0"
+dependencies = [
+ "srvec2",
+]
+
+[[package]]
 name = "srcompositor"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "srcore",
+ "srcolor",
+ "srsurface",
+ "srvec2",
 ]
 
 [[package]]
-name = "srcore"
+name = "srdisplaylist"
 version = "0.1.0"
+dependencies = [
+ "srcolor",
+ "srgraph",
+ "srmatrix",
+ "srpaint",
+ "srpath",
+ "srrect",
+ "srvec2",
+]
+
+[[package]]
+name = "srfixed"
+version = "0.1.0"
+dependencies = [
+ "srmatrix",
+]
+
+[[package]]
+name = "srflatten"
+version = "0.1.0"
+dependencies = [
+ "srbezier",
+ "srpath",
+ "srvec2",
+]
 
 [[package]]
 name = "srgpu"
@@ -2080,11 +2170,62 @@ dependencies = [
  "env_logger",
  "log",
  "pollster",
- "srcore",
+ "srbezier",
+ "srcolor",
+ "srflatten",
+ "srmatrix",
+ "srpass",
+ "srpath",
  "srraster",
+ "srrect",
  "srrender",
+ "srvec2",
  "wgpu",
  "winit",
+]
+
+[[package]]
+name = "srgraph"
+version = "0.1.0"
+dependencies = [
+ "srbezier",
+ "srcolor",
+ "srflatten",
+ "srmatrix",
+ "srpaint",
+ "srpath",
+ "srrect",
+ "srtri",
+ "srvec2",
+]
+
+[[package]]
+name = "srmatrix"
+version = "0.1.0"
+dependencies = [
+ "srrect",
+ "srvec2",
+]
+
+[[package]]
+name = "srpaint"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+]
+
+[[package]]
+name = "srpass"
+version = "0.1.0"
+dependencies = [
+ "srrender",
+]
+
+[[package]]
+name = "srpath"
+version = "0.1.0"
+dependencies = [
+ "srvec2",
 ]
 
 [[package]]
@@ -2092,25 +2233,66 @@ name = "srraster"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "srcore",
+ "srbezier",
+ "srcolor",
+ "srfixed",
+ "srflatten",
+ "srmatrix",
+ "srpath",
+ "srrect",
+ "srsdf",
+ "srvec2",
+]
+
+[[package]]
+name = "srrect"
+version = "0.1.0"
+dependencies = [
+ "srvec2",
 ]
 
 [[package]]
 name = "srrender"
 version = "0.1.0"
 dependencies = [
- "srcompositor",
- "srcore",
+ "srblend",
+ "srcolor",
+ "srmatrix",
+ "srpaint",
+ "srrect",
+ "srvec2",
+]
+
+[[package]]
+name = "srscanline"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+ "srflatten",
+ "srpath",
+ "srtile",
+ "srvec2",
 ]
 
 [[package]]
 name = "srscene"
 version = "0.1.0"
 dependencies = [
+ "srbezier",
+ "srcache",
+ "srcolor",
  "srcompositor",
- "srcore",
+ "srdisplaylist",
+ "srflatten",
+ "srgraph",
+ "srmatrix",
+ "srpaint",
+ "srpath",
  "srraster",
+ "srrect",
  "srrender",
+ "srtri",
+ "srvec2",
 ]
 
 [[package]]
@@ -2118,9 +2300,46 @@ name = "srscheduler"
 version = "0.1.0"
 dependencies = [
  "rayon",
- "srcore",
- "srraster",
+ "srrect",
+ "srtile",
+ "srvec2",
 ]
+
+[[package]]
+name = "srsdf"
+version = "0.1.0"
+dependencies = [
+ "srflatten",
+ "srvec2",
+]
+
+[[package]]
+name = "srsurface"
+version = "0.1.0"
+dependencies = [
+ "srblend",
+ "srcolor",
+]
+
+[[package]]
+name = "srtile"
+version = "0.1.0"
+dependencies = [
+ "srvec2",
+]
+
+[[package]]
+name = "srtri"
+version = "0.1.0"
+dependencies = [
+ "srflatten",
+ "srpath",
+ "srvec2",
+]
+
+[[package]]
+name = "srvec2"
+version = "0.1.0"
 
 [[package]]
 name = "static_assertions"
