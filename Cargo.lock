@@ -2147,6 +2147,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sreffect"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
+ "srsurface",
+ "srvec2",
+]
+
+[[package]]
 name = "srfixed"
 version = "0.1.0"
 dependencies = [
@@ -2311,6 +2320,13 @@ version = "0.1.0"
 dependencies = [
  "srflatten",
  "srvec2",
+]
+
+[[package]]
+name = "srsimd"
+version = "0.1.0"
+dependencies = [
+ "srcolor",
 ]
 
 [[package]]

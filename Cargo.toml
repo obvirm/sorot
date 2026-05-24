@@ -23,6 +23,8 @@ members = [
     "crates/srpass",
     "crates/srraster",
     "crates/srcompositor",
+    "crates/sreffect",
+    "crates/srsimd",
     "crates/srrender",
     "crates/srscene",
     "crates/srgpu",
