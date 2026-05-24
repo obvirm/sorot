@@ -36,6 +36,9 @@ members = [
     "crates/bsp",
     "crates/moment",
     "crates/quadtree",
+    "crates/blur",
+    "crates/winding",
+    "crates/pathops",
     "fuzz",
 ]
 resolver = "2"
