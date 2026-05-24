@@ -46,6 +46,26 @@ pub struct SdfOp {
     pub paint: Paint,
 }
 
+/// Text rendering operation (SDF glyph quad).
+#[derive(Debug, Clone)]
+pub struct TextOp {
+    pub text: String,
+    pub position: Vec2,
+    pub font_size: f32,
+    pub paint: Paint,
+}
+
+/// Image rendering operation (RGBA texture).
+#[derive(Debug, Clone)]
+pub struct ImagePacket {
+    pub pixels: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
+    pub dst_rect: Rect,
+    pub transform: Matrix,
+    pub paint: Paint,
+}
+
 /// Layer compositing operation.
 #[derive(Debug, Clone)]
 pub struct CompositeOp {
@@ -61,6 +81,8 @@ pub struct RenderFrame {
     pub packet_arena: Vec<RenderPacket>,
     pub tiles: Vec<TilePacket>,
     pub sdf_ops: Vec<SdfOp>,
+    pub text_ops: Vec<TextOp>,
+    pub image_ops: Vec<ImagePacket>,
     pub composite_ops: Vec<CompositeOp>,
     pub screen_width: u32,
     pub screen_height: u32,
@@ -94,6 +116,8 @@ impl RenderFrame {
             packet_arena: Vec::new(),
             tiles,
             sdf_ops: Vec::new(),
+            text_ops: Vec::new(),
+            image_ops: Vec::new(),
             composite_ops: Vec::new(),
             screen_width,
             screen_height,

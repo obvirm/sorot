@@ -1,5 +1,5 @@
 [package]
-name = "canvas"
+name = "bspraster"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -7,11 +7,6 @@ license.workspace = true
 [dependencies]
 vector = { path = "../vector" }
 rect = { path = "../rect" }
-matrix = { path = "../matrix" }
 color = { path = "../color" }
-paint = { path = "../paint" }
 pathbuilder = { path = "../pathbuilder" }
 flatten = { path = "../flatten" }
-scenegraph = { path = "../scenegraph" }
-displaylist = { path = "../displaylist" }
-image = { version = "0.25", default-features = false, features = ["png"] }

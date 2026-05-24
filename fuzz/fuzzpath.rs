@@ -2,7 +2,8 @@
 
 use libfuzzer_sys::fuzz_target;
 use vector::Vec2;
-use pathbuilder::{flatten_path, Path};
+use pathbuilder::Path;
+use flatten::flatten_path;
 
 fuzz_target!(|data: &[u8]| {
     if data.len() < 8 { return; }

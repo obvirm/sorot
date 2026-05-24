@@ -72,10 +72,90 @@ impl Canvas {
     }
 
     pub fn draw_path(&mut self, path: &pathbuilder::Path) {
+        // If stroke paint, convert to stroke outline before storing
+        let path_to_store = self.stroke_aware_path(path);
         let paint_id = self.graph.add_paint(self.current.paint.clone());
-        let path_id = self.graph.store_path(path);
+        let path_id = self.graph.store_path(&path_to_store);
         let node = self.graph.add_node(NodeKind::Path { path_id }, paint_id);
         self.graph.set_transform(node, self.current.transform);
+    }
+
+    /// If the current paint has a stroke style, flatten + stroke the path
+    /// and return the outline as a new Path. Otherwise return the original.
+    fn stroke_aware_path(&mut self, path: &pathbuilder::Path) -> pathbuilder::Path {
+        match &self.current.paint.style {
+            paint::PaintStyle::Fill => {
+                path.clone()
+            }
+            paint::PaintStyle::Stroke { width, cap, join } => {
+                // Flatten the path
+                let flat = flatten::flatten_path(path, 0.5);
+                // Convert stroke to fill outline
+                let stroke_cap = match cap {
+                    paint::LineCap::Butt => flatten::stroke::LineCap::Butt,
+                    paint::LineCap::Round => flatten::stroke::LineCap::Round,
+                    paint::LineCap::Square => flatten::stroke::LineCap::Square,
+                };
+                let stroke_join = match join {
+                    paint::LineJoin::Miter => flatten::stroke::LineJoin::Miter,
+                    paint::LineJoin::Round => flatten::stroke::LineJoin::Round,
+                    paint::LineJoin::Bevel => flatten::stroke::LineJoin::Bevel,
+                };
+                let outline = flatten::stroke::stroke_path(&flat, *width, stroke_join, stroke_cap, 4.0);
+                // Convert back to Path for storage
+                flatten::stroke::flattened_to_path(&outline)
+            }
+        }
+    }
+
+    /// Draw a line from p0 to p1 with current paint stroke style.
+    pub fn draw_line(&mut self, p0: Vec2, p1: Vec2) {
+        let mut path = pathbuilder::Path::new();
+        path.move_to(p0);
+        path.line_to(p1);
+        self.draw_path(&path);
+    }
+
+    /// Draw text using SDF rendering at position (x, y).
+    pub fn draw_text(&mut self, text: &str, x: f32, y: f32, font_size: f32) {
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
+        let node = self.graph.add_node(
+            NodeKind::Text {
+                text: text.to_string(),
+                position: Vec2::new(x, y),
+                font_size,
+            },
+            paint_id,
+        );
+        self.graph.set_transform(node, self.current.transform);
+    }
+
+    /// Draw an image from raw RGBA pixel data.
+    pub fn draw_image_rgba(
+        &mut self,
+        pixels: Vec<u8>,
+        width: u32,
+        height: u32,
+        dst_rect: Rect,
+    ) {
+        let paint_id = self.graph.add_paint(self.current.paint.clone());
+        let img_id = self.graph.store_image(pixels, width, height);
+        let node = self.graph.add_node(NodeKind::Image { img_id, dst_rect }, paint_id);
+        self.graph.set_transform(node, self.current.transform);
+    }
+
+    /// Draw an image from a file path.
+    pub fn draw_image(&mut self, path: &str, dst_rect: Rect) -> Result<(), String> {
+        match image::open(path) {
+            Ok(img) => {
+                let rgba = img.to_rgba8();
+                let (w, h) = rgba.dimensions();
+                let pixels = rgba.into_raw();
+                self.draw_image_rgba(pixels, w, h, dst_rect);
+                Ok(())
+            }
+            Err(e) => Err(format!("Failed to load image '{}': {}", path, e)),
+        }
     }
 
     pub fn begin_group(&mut self, opacity: f32) -> NodeId {

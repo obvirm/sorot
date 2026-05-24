@@ -65,7 +65,9 @@ impl PassGraph {
             }
         }
 
-        if !tile_groups.is_empty() {
+        let has_shape = !tile_groups.is_empty();
+
+        if has_shape {
             passes.push(RenderPass {
                 kind: PassKind::Shape { tile_groups, target_id: shape_target },
                 label: "shape".into(),
@@ -79,12 +81,11 @@ impl PassGraph {
             });
         }
 
-        let has_shape = !passes.is_empty();
         let has_sdf = !frame.sdf_ops.is_empty();
+        let mut input_ids = Vec::new();
+        if has_shape { input_ids.push(shape_target); }
+        if has_sdf { input_ids.push(sdf_target); }
         if has_shape || has_sdf {
-            let mut input_ids = Vec::new();
-            if has_shape { input_ids.push(shape_target); }
-            if has_sdf { input_ids.push(sdf_target); }
             passes.push(RenderPass {
                 kind: PassKind::Composite { input_ids, clear_color: [0.05, 0.05, 0.08, 1.0] },
                 label: "composite".into(),

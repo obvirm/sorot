@@ -9,6 +9,7 @@ use triangulate::{triangulate, TriMesh};
 pub type NodeId = u32;
 pub type PaintId = u32;
 pub type PathId = u32;
+pub type ImageId = u32;
 
 pub const NODE_NULL: NodeId = u32::MAX;
 
@@ -20,11 +21,21 @@ pub struct StoredPath {
     pub bounds: Rect,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Stored image texture (RGBA pixel data).
+#[derive(Debug, Clone)]
+pub struct StoredImage {
+    pub pixels: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Debug, Clone)]
 pub enum NodeKind {
     Rect { rect: Rect },
     Oval { center: Vec2, rx: f32, ry: f32 },
     Path { path_id: PathId },
+    Image { img_id: ImageId, dst_rect: Rect },
+    Text { text: String, position: Vec2, font_size: f32 },
     Group { opacity: f32 },
     Transform(Matrix),
 }
@@ -44,6 +55,7 @@ pub struct SceneGraph {
     pub nodes: Vec<SceneNode>,
     pub paints: Vec<Paint>,
     pub paths: Vec<StoredPath>,
+    pub images: Vec<StoredImage>,
     pub paint_order: Vec<NodeId>,
 }
 
@@ -53,6 +65,7 @@ impl SceneGraph {
             nodes: Vec::new(),
             paints: Vec::new(),
             paths: Vec::new(),
+            images: Vec::new(),
             paint_order: Vec::new(),
         }
     }
@@ -85,6 +98,16 @@ impl SceneGraph {
             bounds,
         });
         id
+    }
+
+    pub fn store_image(&mut self, pixels: Vec<u8>, width: u32, height: u32) -> ImageId {
+        let id = self.images.len() as ImageId;
+        self.images.push(StoredImage { pixels, width, height });
+        id
+    }
+
+    pub fn get_image(&self, id: ImageId) -> Option<&StoredImage> {
+        self.images.get(id as usize)
     }
 
     pub fn get_path(&self, id: PathId) -> Option<&StoredPath> {
@@ -135,6 +158,11 @@ impl SceneGraph {
                     .map(|s| s.bounds)
                     .unwrap_or(Rect::zero())
             }
+            NodeKind::Image { dst_rect, .. } => dst_rect,
+            NodeKind::Text { position, font_size, .. } => Rect::new(
+                position,
+                Vec2::new(position.x + font_size * 8.0, position.y + font_size),
+            ),
             NodeKind::Group { .. } | NodeKind::Transform(_) => Rect::zero(),
         };
 

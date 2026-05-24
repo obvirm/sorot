@@ -127,6 +127,29 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
 }
 "#;
 
+const TEXTURE_SHADER: &str = r#"
+@group(0) @binding(0) var img_tex: texture_2d<f32>;
+@group(0) @binding(1) var img_sampler: sampler;
+
+struct VertOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs(@location(0) pos: vec2<f32>, @location(1) uv: vec2<f32>) -> VertOutput {
+    var out: VertOutput;
+    out.position = vec4<f32>(pos, 0.0, 1.0);
+    out.uv = uv;
+    return out;
+}
+
+@fragment
+fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    return textureSample(img_tex, img_sampler, uv);
+}
+"#;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct SdfUniform {
@@ -146,10 +169,12 @@ pub struct WgpuBackend {
     color_pipeline: wgpu::RenderPipeline,
     sdf_pipeline: wgpu::RenderPipeline,
     composite_pipeline: wgpu::RenderPipeline,
+    texture_pipeline: wgpu::RenderPipeline,
 
     sdf_tex_layout: wgpu::BindGroupLayout,
     sdf_uni_layout: wgpu::BindGroupLayout,
     composite_layout: wgpu::BindGroupLayout,
+    texture_tex_layout: wgpu::BindGroupLayout,
 
     texture_pool: TexturePool,
     composite_vb: wgpu::Buffer,
@@ -327,7 +352,50 @@ impl WgpuBackend {
             depth_stencil: None, multisample: wgpu::MultisampleState::default(), multiview: None, cache: None,
         });
 
-        let mut texture_pool = TexturePool::new(&device);
+        // Texture (image) rendering pipeline
+        let texture_tex_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("texture_tex"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0, visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2, multisampled: false,
+                    }, count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1, visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), count: None,
+                },
+            ],
+        });
+        let tshader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("texture"), source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(TEXTURE_SHADER)),
+        });
+        let texture_pl_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("texture_pl"), bind_group_layouts: &[&texture_tex_layout],
+            push_constant_ranges: &[],
+        });
+        let texture_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("texture_pipe"),
+            layout: Some(&texture_pl_layout),
+            vertex: wgpu::VertexState {
+                module: &tshader, entry_point: Some("vs"),
+                buffers: &[CompositeVertex::LAYOUT], compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &tshader, entry_point: Some("fs"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format, blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { topology: wgpu::PrimitiveTopology::TriangleList, ..Default::default() },
+            depth_stencil: None, multisample: wgpu::MultisampleState::default(), multiview: None, cache: None,
+        });
+
+        let texture_pool = TexturePool::new(&device);
 
         let composite_vb = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("composite_vb"),
@@ -356,8 +424,8 @@ impl WgpuBackend {
 
         Self {
             window, surface, device, queue, config, surface_format: format,
-            color_pipeline, sdf_pipeline, composite_pipeline,
-            sdf_tex_layout, sdf_uni_layout, composite_layout,
+            color_pipeline, sdf_pipeline, composite_pipeline, texture_pipeline,
+            sdf_tex_layout, sdf_uni_layout, composite_layout, texture_tex_layout,
             texture_pool,
             composite_vb, fullscreen_ib,
             shape_vb, shape_ib,
@@ -535,6 +603,115 @@ impl WgpuBackend {
             }
         }
 
+        // Render image ops directly to the surface (if any)
+        if !frame.image_ops.is_empty() {
+            let output = match self.surface.get_current_texture() {
+                Ok(f) => f,
+                Err(wgpu::SurfaceError::Lost) => {
+                    self.surface.configure(&self.device, &self.config);
+                    return;
+                }
+                Err(_) => return,
+            };
+            let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+            for img_op in &frame.image_ops {
+                // Upload the RGBA pixels as a GPU texture
+                let img_tex = self.device.create_texture(&wgpu::TextureDescriptor {
+                    label: Some("img_tex"),
+                    size: wgpu::Extent3d {
+                        width: img_op.width.max(1),
+                        height: img_op.height.max(1),
+                        depth_or_array_layers: 1,
+                    },
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                    usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                    view_formats: &[],
+                });
+
+                self.queue.write_texture(
+                    wgpu::TexelCopyTextureInfo {
+                        texture: &img_tex, mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All,
+                    },
+                    &img_op.pixels,
+                    wgpu::TexelCopyBufferLayout {
+                        offset: 0,
+                        bytes_per_row: Some(img_op.width * 4),
+                        rows_per_image: Some(img_op.height),
+                    },
+                    wgpu::Extent3d {
+                        width: img_op.width.max(1),
+                        height: img_op.height.max(1),
+                        depth_or_array_layers: 1,
+                    },
+                );
+
+                let img_view = img_tex.create_view(&wgpu::TextureViewDescriptor::default());
+                let img_sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+                    label: Some("img_sampler"),
+                    mag_filter: wgpu::FilterMode::Linear,
+                    min_filter: wgpu::FilterMode::Linear,
+                    ..Default::default()
+                });
+
+                let img_bg = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: Some("img_bg"),
+                    layout: &self.texture_tex_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&img_view) },
+                        wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&img_sampler) },
+                    ],
+                });
+
+                // Compute clip-space coords from dst_rect
+                let w = self.config.width as f32;
+                let h = self.config.height as f32;
+                let hw = w * 0.5;
+                let hh = h * 0.5;
+                let r = img_op.dst_rect;
+                let x0 = r.min.x / hw - 1.0;
+                let y0 = 1.0 - r.min.y / hh;
+                let x1 = r.max.x / hw - 1.0;
+                let y1 = 1.0 - r.max.y / hh;
+
+                let quad: [CompositeVertex; 4] = [
+                    CompositeVertex { position: [x0, y0], uv: [0.0, 0.0] },
+                    CompositeVertex { position: [x1, y0], uv: [1.0, 0.0] },
+                    CompositeVertex { position: [x1, y1], uv: [1.0, 1.0] },
+                    CompositeVertex { position: [x0, y1], uv: [0.0, 1.0] },
+                ];
+                let img_vb = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("img_vb"),
+                    contents: bytemuck::cast_slice(&quad),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+
+                let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: Some("img_pass"),
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Load,
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
+                });
+                pass.set_pipeline(&self.texture_pipeline);
+                pass.set_bind_group(0, &img_bg, &[]);
+                pass.set_vertex_buffer(0, img_vb.slice(..));
+                pass.set_index_buffer(self.fullscreen_ib.slice(..), wgpu::IndexFormat::Uint32);
+                pass.draw_indexed(0..6, 0, 0..1);
+            }
+        }
+
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
@@ -595,7 +772,7 @@ impl WgpuBackend {
         });
 
         let cf = {
-            let u8 = op.paint.color.to_premultiplied_u8();
+            let u8 = op.paint.color().to_premultiplied_u8();
             [u8[0] as f32 / 255.0, u8[1] as f32 / 255.0, u8[2] as f32 / 255.0, u8[3] as f32 / 255.0]
         };
         let su = SdfUniform { color: cf, spread: 0.04, _pad: [0.0; 3] };

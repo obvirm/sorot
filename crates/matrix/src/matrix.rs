@@ -19,8 +19,6 @@ impl TypeMask {
     #[inline] pub fn is_translate(self) -> bool { self.0 == Self::TRANSLATE }
     #[inline] pub fn is_affine(self) -> bool { self.0 & Self::PERSPECTIVE == 0 }
 
-    #[inline] fn set(&mut self, bit: u8) { self.0 |= bit; }
-
     fn compute(a: f32, c: f32, e: f32, b: f32, d: f32, f: f32, p0: f32, p1: f32, p2: f32) -> Self {
         let mut bits = Self::IDENTITY;
         if p0 != 0.0 || p1 != 0.0 || p2 != 1.0 { bits |= Self::PERSPECTIVE; bits |= Self::AFFINE; return Self(bits); }
@@ -73,6 +71,17 @@ impl Matrix {
             p0: 0.0, p1: 0.0, p2: 1.0,
             mask: TypeMask(0),
         }
+    }
+
+    /// Create from raw affine components with automatic mask computation.
+    #[inline]
+    pub fn from_raw(a: f32, c: f32, e: f32, b: f32, d: f32, f: f32) -> Self {
+        let m = Self {
+            a, c, e, b, d, f,
+            p0: 0.0, p1: 0.0, p2: 1.0,
+            mask: TypeMask(0),
+        };
+        Self { mask: TypeMask::compute(m.a, m.c, m.e, m.b, m.d, m.f, m.p0, m.p1, m.p2), ..m }
     }
 
     #[inline]
@@ -156,7 +165,7 @@ impl Matrix {
         match self.mask.bits() {
             TypeMask::IDENTITY => p,
             TypeMask::TRANSLATE => Vec2::new(p.x + self.e, p.y + self.f),
-            TypeMask::TRANSLATE | TypeMask::SCALE => Vec2::new(self.a * p.x + self.e, self.d * p.y + self.f),
+            TypeMask::SCALE => Vec2::new(self.a * p.x + self.e, self.d * p.y + self.f),
             _ if self.mask.is_affine() => Vec2::new(
                 self.a * p.x + self.c * p.y + self.e,
                 self.b * p.x + self.d * p.y + self.f,

@@ -1,0 +1,11 @@
+[package]
+name = "quadtree"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+vector = { path = "../vector" }
+rect = { path = "../rect" }
+color = { path = "../color" }
+flatten = { path = "../flatten" }

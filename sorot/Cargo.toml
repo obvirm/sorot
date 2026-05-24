@@ -14,7 +14,6 @@ pathbuilder = { path = "../crates/pathbuilder" }
 flatten = { path = "../crates/flatten" }
 raster = { path = "../crates/raster" }
 gpu = { path = "../crates/gpu" }
-scene = { path = "../crates/scene" }
 renderir = { path = "../crates/renderir" }
 canvas = { path = "../crates/canvas" }
 scenegraph = { path = "../crates/scenegraph" }

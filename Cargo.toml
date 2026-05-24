@@ -33,7 +33,9 @@ members = [
     "crates/geometrycache",
     "crates/pipeline",
     "crates/worker",
-    "crates/tiling",
+    "crates/bsp",
+    "crates/moment",
+    "crates/quadtree",
     "fuzz",
 ]
 resolver = "2"

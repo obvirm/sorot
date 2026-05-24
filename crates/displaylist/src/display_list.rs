@@ -29,10 +29,29 @@ pub struct DrawPath {
 }
 
 #[derive(Debug, Clone)]
+pub struct DrawImage {
+    pub img_id: u32,
+    pub dst_rect: Rect,
+    pub paint: Paint,
+    pub transform: Matrix,
+}
+
+#[derive(Debug, Clone)]
+pub struct DrawText {
+    pub text: String,
+    pub position: Vec2,
+    pub font_size: f32,
+    pub paint: Paint,
+    pub transform: Matrix,
+}
+
+#[derive(Debug, Clone)]
 pub enum DrawCommand {
     Rect(DrawRect),
     Oval(DrawOval),
     Path(DrawPath),
+    Image(DrawImage),
+    Text(DrawText),
 }
 
 #[derive(Debug, Clone)]
@@ -83,26 +102,43 @@ pub fn build_display_list(
     let t = inherited_transform.then(n.transform);
     let paint = paint_override.unwrap_or(&graph.paints[n.paint_id as usize]);
 
-    match n.kind {
+    match &n.kind {
         NodeKind::Rect { rect } => {
             out.push(DrawCommand::Rect(DrawRect {
-                rect,
+                rect: *rect,
                 paint: paint.clone(),
                 transform: t,
             }));
         }
         NodeKind::Oval { center, rx, ry } => {
             out.push(DrawCommand::Oval(DrawOval {
-                center,
-                rx,
-                ry,
+                center: *center,
+                rx: *rx,
+                ry: *ry,
                 paint: paint.clone(),
                 transform: t,
             }));
         }
         NodeKind::Path { path_id } => {
             out.push(DrawCommand::Path(DrawPath {
-                path_id,
+                path_id: *path_id,
+                paint: paint.clone(),
+                transform: t,
+            }));
+        }
+        NodeKind::Image { img_id, dst_rect } => {
+            out.push(DrawCommand::Image(DrawImage {
+                img_id: *img_id,
+                dst_rect: *dst_rect,
+                paint: paint.clone(),
+                transform: t,
+            }));
+        }
+        NodeKind::Text { text, position, font_size } => {
+            out.push(DrawCommand::Text(DrawText {
+                text: text.clone(),
+                position: *position,
+                font_size: *font_size,
                 paint: paint.clone(),
                 transform: t,
             }));

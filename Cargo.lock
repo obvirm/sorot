@@ -247,6 +247,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bspraster"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "flatten",
+ "pathbuilder",
+ "rect",
+ "vector",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -316,6 +327,8 @@ version = "0.1.0"
 dependencies = [
  "color",
  "displaylist",
+ "flatten",
+ "image",
  "matrix",
  "paint",
  "pathbuilder",
@@ -1142,6 +1155,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "moment"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "vector",
+]
+
+[[package]]
 name = "moxcms"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1701,6 +1722,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0c5ccf5294c6ccd63a74f1565028353830a9c2f5eb0c682c355c471726a6e3f"
 
 [[package]]
+name = "quadtree"
+version = "0.1.0"
+dependencies = [
+ "color",
+ "flatten",
+ "rect",
+ "vector",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.39.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2109,7 +2140,6 @@ dependencies = [
  "raster",
  "rect",
  "renderir",
- "scene",
  "scenegraph",
  "vector",
 ]
@@ -2244,16 +2274,6 @@ name = "tile"
 version = "0.1.0"
 dependencies = [
  "vector",
-]
-
-[[package]]
-name = "tiling"
-version = "0.1.0"
-dependencies = [
- "rect",
- "tile",
- "vector",
- "worker",
 ]
 
 [[package]]
